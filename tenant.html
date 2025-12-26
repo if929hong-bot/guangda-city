@@ -255,6 +255,51 @@
       cursor: pointer;
       font-size: 14px;
     }
+    /* 繳租銀行資訊樣式 */
+    .payment-bank-info {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .bank-info-title {
+      font-size: 18px;
+      color: #1f4e8c;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .bank-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+    }
+    .bank-info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .bank-info-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .bank-info-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+      padding: 8px 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+    .bank-info-empty {
+      color: #999;
+      font-size: 14px;
+      padding: 20px 0;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
   </style>
 </head>
 <body>
@@ -286,6 +331,14 @@
       <div class="label">相簿圖片</div>
       <div class="value">0</div>
       <div class="desc">已上傳圖片數量</div>
+    </div>
+  </div>
+
+  <!-- 繳租銀行資訊區塊 -->
+  <div class="payment-bank-info">
+    <div class="bank-info-title">繳租銀行資訊</div>
+    <div class="bank-info-grid" id="bankInfoGrid">
+      <!-- 動態加載銀行資訊 -->
     </div>
   </div>
 
@@ -514,6 +567,51 @@
       if (e.target === paymentModal) paymentModal.style.display = 'none';
       if (e.target === uploadModal) uploadModal.style.display = 'none';
     });
+
+    // 租客頁面登出功能
+    document.querySelector('.logout-btn').addEventListener('click', () => {
+      if (confirm('確定要登出嗎？')) {
+        window.location.href = 'login.html'; // 返回登入頁面
+      }
+    });
+
+    // 加載並顯示繳租銀行資訊
+    function loadBankInfo() {
+      const bankInfoGrid = document.getElementById('bankInfoGrid');
+      const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
+      
+      // 清空原有內容
+      bankInfoGrid.innerHTML = '';
+      
+      // 判斷是否有儲存的銀行資訊
+      if (!paymentInfo.bankName || !paymentInfo.branchName || !paymentInfo.accountName || !paymentInfo.accountNumber) {
+        bankInfoGrid.innerHTML = '<div class="bank-info-empty">管理員尚未設定繳租銀行資訊</div>';
+        return;
+      }
+      
+      // 動態生成銀行資訊展示項
+      const bankInfoItems = [
+        { label: '銀行名稱', value: paymentInfo.bankName },
+        { label: '分行名稱', value: paymentInfo.branchName },
+        { label: '戶名', value: paymentInfo.accountName },
+        { label: '銀行帳號', value: paymentInfo.accountNumber }
+      ];
+      
+      bankInfoItems.forEach(item => {
+        const infoItem = document.createElement('div');
+        infoItem.className = 'bank-info-item';
+        infoItem.innerHTML = `
+          <span class="bank-info-label">${item.label}</span>
+          <span class="bank-info-value">${item.value}</span>
+        `;
+        bankInfoGrid.appendChild(infoItem);
+      });
+    }
+
+    // 頁面加載時加載銀行資訊
+    window.addEventListener('load', loadBankInfo);
+    // 監聽本地存儲變化，即時更新銀行資訊
+    window.addEventListener('storage', loadBankInfo);
   </script>
 </body>
 </html>
