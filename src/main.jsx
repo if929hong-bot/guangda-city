@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import './assets/index.css' // 全局樣式
+// 正确引入assets下的index.css
+import './assets/index.css'
 
-// 渲染根組件到index.html的#root節點
+// 渲染根组件（确保括号完整）
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
