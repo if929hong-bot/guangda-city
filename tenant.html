@@ -294,7 +294,7 @@
     <div class="section-header">
       <div class="section-title">租約繳費記錄</div>
       <button class="btn-green" id="openPaymentModal">
-        <<i class="fa-solid fa-plus"></</i> 新增繳費記錄
+        <i class="fa-solid fa-plus"></i> 新增繳費記錄
       </button>
     </div>
     <div class="empty-state">
@@ -308,7 +308,7 @@
     <div class="section-header">
       <div class="section-title">我的相簿</div>
       <button class="btn-blue" id="openUploadModal">
-        <<i class="fa-solid fa-plus"></</i> 上傳圖片
+        <i class="fa-solid fa-plus"></i> 上傳圖片
       </button>
     </div>
     <div class="empty-state">
@@ -322,7 +322,7 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">新增繳費記錄</div>
-        <button class="modal-close" id="closePaymentModal"><<i class="fa-solid fa-xmark"></</i></button>
+        <button class="modal-close" id="closePaymentModal"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <form class="modal-form">
@@ -336,7 +336,7 @@
           </div>
           <div class="modal-form-group">
             <label for="rent">房租</label>
-            <input type="text" id="rent" class="modal-form-input" placeholder="請輸入房租">
+            <input type="number" id="rent" class="modal-form-input" placeholder="請輸入房租" oninput="calculateTotal()">
           </div>
           <div class="modal-form-group">
             <label for="totalAmount">總金額（自動計算）</label>
@@ -347,11 +347,11 @@
           </div>
           <div class="modal-form-group">
             <label for="lastElectricity">上月電表度數</label>
-            <input type="text" id="lastElectricity" class="modal-form-input" placeholder="上月電表讀數">
+            <input type="number" id="lastElectricity" class="modal-form-input" placeholder="上月電表讀數" oninput="calculateElectricity()">
           </div>
           <div class="modal-form-group">
             <label for="currentElectricity">本月電表度數</label>
-            <input type="text" id="currentElectricity" class="modal-form-input" placeholder="本月電表讀數">
+            <input type="number" id="currentElectricity" class="modal-form-input" placeholder="本月電表讀數" oninput="calculateElectricity()">
           </div>
           <div class="modal-form-group">
             <label for="electricityUsage">用電量（度）</label>
@@ -360,7 +360,7 @@
           </div>
           <div class="modal-form-group">
             <label for="electricityPrice">每度電費（元）</label>
-            <input type="text" id="electricityPrice" class="modal-form-input" placeholder="每度多少元">
+            <input type="number" id="electricityPrice" class="modal-form-input" placeholder="每度多少元" oninput="calculateElectricity()">
           </div>
           <div class="modal-form-group">
             <label for="electricityTotal">電費總價（自動計算）</label>
@@ -371,7 +371,7 @@
           </div>
           <div class="modal-form-group">
             <label for="waterPeople">水費幾人</label>
-            <input type="text" id="waterPeople" class="modal-form-input" placeholder="請輸入人數">
+            <input type="number" id="waterPeople" class="modal-form-input" placeholder="請輸入人數" oninput="calculateTotal()">
             <div class="modal-form-note">請輸入分攤人數</div>
           </div>
           <div class="modal-form-group">
@@ -381,7 +381,7 @@
           </div>
           <div class="modal-form-group">
             <label for="waterTotal">總水費（元）</label>
-            <input type="text" id="waterTotal" class="modal-form-input" placeholder="請輸入總水費">
+            <input type="number" id="waterTotal" class="modal-form-input" placeholder="請輸入總水費" oninput="calculateTotal()">
             <div class="modal-form-note">請輸入應付水費金額</div>
           </div>
           <div class="modal-form-group">
@@ -415,7 +415,7 @@
     <div class="modal upload-modal">
       <div class="modal-header">
         <div class="modal-title">上傳圖片</div>
-        <button class="modal-close" id="closeUploadModal"><<i class="fa-solid fa-xmark"></</i></button>
+        <button class="modal-close" id="closeUploadModal"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-body">
         <form class="modal-form">
@@ -437,6 +437,40 @@
   </div>
 
   <script>
+    // 電費自動計算函數
+    function calculateElectricity() {
+      // 获取输入值（转数字，空值设为0）
+      const lastElectricity = parseFloat(document.getElementById('lastElectricity').value) || 0;
+      const currentElectricity = parseFloat(document.getElementById('currentElectricity').value) || 0;
+      const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0;
+      
+      // 計算用電量（本月 - 上月，最小為0）
+      const electricityUsage = Math.max(0, currentElectricity - lastElectricity);
+      // 計算電費總價（用電量 * 每度電費）
+      const electricityTotal = electricityUsage * electricityPrice;
+      
+      // 填充計算結果（保留2位小數）
+      document.getElementById('electricityUsage').value = electricityUsage.toFixed(1);
+      document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
+      
+      // 同步更新總金額
+      calculateTotal();
+    }
+
+    // 總金額自動計算函數（房租 + 電費 + 水費）
+    function calculateTotal() {
+      // 获取各項金額
+      const rent = parseFloat(document.getElementById('rent').value) || 0;
+      const electricityTotal = parseFloat(document.getElementById('electricityTotal').value) || 0;
+      const waterTotal = parseFloat(document.getElementById('waterTotal').value) || 0;
+      
+      // 計算總金額
+      const totalAmount = rent + electricityTotal + waterTotal;
+      
+      // 填充總金額（保留2位小數）
+      document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+    }
+
     // 彈窗控制
     const paymentModal = document.getElementById('paymentModal');
     const uploadModal = document.getElementById('uploadModal');
