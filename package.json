@@ -1,20 +1,38 @@
 {
-  "name": "guangda-city-tenant-management-201653",
+  "type": "module",
+  "name": "guangda-city-tenant-management-201653-frontend-react",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite dev",
     "build": "vite build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "dependencies": {
+    "@chakra-ui/icons": "^2.1.0",
+    "@chakra-ui/react": "^2.8.0",
+    "@fortawesome/fontawesome-free": "latest",
+    "@fortawesome/fontawesome-svg-core": "latest",
+    "@fortawesome/free-brands-svg-icons": "latest",
+    "@fortawesome/free-solid-svg-icons": "latest",
+    "@fortawesome/react-fontawesome": "latest",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "axios": "^1.6.2",
+    "chart.js": "latest",
+    "framer-motion": "^10.16.16",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-dropzone": "latest",
+    "react-icons": "latest",
+    "react-redux": "^8.1.3",
+    "react-router-dom": "^6.30.2",
+    "socket.io-client": "^4.7.5",
+    "uuid": "latest"
+  },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "vite": "^7.2.4"
+    "@babel/plugin-transform-react-jsx": "latest",
+    "@babel/preset-react": "latest",
+    "@vitejs/plugin-react": "latest",
+    "vite": "^5.4.0",
+    "zustand": "^5"
   }
 }
