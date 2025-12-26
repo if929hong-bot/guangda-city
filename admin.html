@@ -7,6 +7,53 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    /* 基礎樣式重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft JhengHei', sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7fa;
+      padding: 20px;
+    }
+
+    /* 頁頭樣式 */
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .admin-title {
+      color: #1f4e8c;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+
     /* 新增繳租資訊樣式 */
     .payment-info-section {
       max-width: 1200px;
@@ -16,38 +63,64 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       padding: 20px;
     }
+
     .payment-info-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
     }
+
     .payment-info-title {
       font-size: 18px;
       color: #1f4e8c;
       font-weight: bold;
     }
+
     .payment-info-form {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px 20px;
     }
+
     .form-group {
       margin-bottom: 10px;
     }
+
     .form-group label {
       display: block;
       font-size: 14px;
       color: #333;
       margin-bottom: 5px;
     }
+
     .form-input {
       width: 100%;
       padding: 8px 10px;
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 14px;
+      transition: border-color 0.3s;
     }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    /* 表單驗證錯誤樣式 */
+    .form-input.error {
+      border-color: #dc3545;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 3px;
+      display: none;
+    }
+
     .btn-save {
       background-color: #28a745;
       color: white;
@@ -61,22 +134,123 @@
       gap: 5px;
       grid-column: 1 / -1;
       justify-self: flex-end;
+      transition: background-color 0.3s;
     }
+
     .btn-save:hover {
       background-color: #218838;
     }
+
+    .btn-save:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+
     .save-success {
       color: #28a745;
       font-size: 14px;
       margin-top: 10px;
       display: none;
+      grid-column: 1 / -1;
+    }
+
+    /* 統計卡片樣式 */
+    .stats-container {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .value {
+      color: #1f4e8c;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .desc {
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* 後台標籤樣式 */
+    .admin-tabs {
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      display: flex;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-tab {
+      padding: 15px 20px;
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .admin-tab.active {
+      color: #1f4e8c;
+      border-bottom-color: #1f4e8c;
+      font-weight: bold;
+    }
+
+    .admin-tab:hover {
+      color: #1f4e8c;
+    }
+
+    /* 表格容器樣式 */
+    .table-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .empty-text {
+      color: #999;
+      text-align: center;
+      padding: 40px 0;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div class="admin-header">
     <h1 class="admin-title">廣大城租客管理 - 管理員後台</h1>
-    <button class="logout-btn" id="logoutBtn">登出</button>
+    <button class="logout-btn" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> 登出
+    </button>
   </div>
 
   <!-- 繳租資訊設定區塊 -->
@@ -88,23 +262,27 @@
       <div class="form-group">
         <label for="bankName">銀行名稱 *</label>
         <input type="text" id="bankName" class="form-input" placeholder="請輸入銀行名稱（如：台新銀行）">
+        <div class="error-message" id="bankNameError">請輸入銀行名稱</div>
       </div>
       <div class="form-group">
         <label for="branchName">分行名稱 *</label>
         <input type="text" id="branchName" class="form-input" placeholder="請輸入分行名稱（如：台北信義分行）">
+        <div class="error-message" id="branchNameError">請輸入分行名稱</div>
       </div>
       <div class="form-group">
         <label for="accountName">戶名 *</label>
         <input type="text" id="accountName" class="form-input" placeholder="請輸入銀行戶名">
+        <div class="error-message" id="accountNameError">請輸入銀行戶名</div>
       </div>
       <div class="form-group">
         <label for="accountNumber">銀行帳號 *</label>
         <input type="text" id="accountNumber" class="form-input" placeholder="請輸入銀行帳號">
+        <div class="error-message" id="accountNumberError">請輸入銀行帳號</div>
       </div>
       <button type="button" class="btn-save" id="savePaymentInfoBtn">
         <i class="fa-solid fa-save"></i> 儲存資訊
       </button>
-      <div class="save-success" id="saveSuccess">儲存成功！</div>
+      <div class="save-success" id="saveSuccess">✅ 儲存成功！</div>
     </form>
   </div>
 
@@ -162,47 +340,133 @@
       }
     });
 
-    // 繳租資訊相關邏輯
+    // 繳租資訊相關邏輯 - 增強版
     const bankNameInput = document.getElementById('bankName');
     const branchNameInput = document.getElementById('branchName');
     const accountNameInput = document.getElementById('accountName');
     const accountNumberInput = document.getElementById('accountNumber');
     const savePaymentInfoBtn = document.getElementById('savePaymentInfoBtn');
     const saveSuccess = document.getElementById('saveSuccess');
+    
+    // 錯誤提示元素
+    const bankNameError = document.getElementById('bankNameError');
+    const branchNameError = document.getElementById('branchNameError');
+    const accountNameError = document.getElementById('accountNameError');
+    const accountNumberError = document.getElementById('accountNumberError');
+
+    // 表單驗證函數
+    function validateForm() {
+      let isValid = true;
+      
+      // 重置錯誤樣式和提示
+      [bankNameInput, branchNameInput, accountNameInput, accountNumberInput].forEach(input => {
+        input.classList.remove('error');
+      });
+      [bankNameError, branchNameError, accountNameError, accountNumberError].forEach(error => {
+        error.style.display = 'none';
+      });
+
+      // 驗證銀行名稱
+      if (!bankNameInput.value.trim()) {
+        bankNameInput.classList.add('error');
+        bankNameError.style.display = 'block';
+        isValid = false;
+      }
+
+      // 驗證分行名稱
+      if (!branchNameInput.value.trim()) {
+        branchNameInput.classList.add('error');
+        branchNameError.style.display = 'block';
+        isValid = false;
+      }
+
+      // 驗證戶名
+      if (!accountNameInput.value.trim()) {
+        accountNameInput.classList.add('error');
+        accountNameError.style.display = 'block';
+        isValid = false;
+      }
+
+      // 驗證銀行帳號
+      if (!accountNumberInput.value.trim()) {
+        accountNumberInput.classList.add('error');
+        accountNumberError.style.display = 'block';
+        isValid = false;
+      }
+
+      return isValid;
+    }
 
     // 頁面加載時讀取本地存儲的繳租資訊
     window.addEventListener('load', () => {
-      const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
-      bankNameInput.value = paymentInfo.bankName || '';
-      branchNameInput.value = paymentInfo.branchName || '';
-      accountNameInput.value = paymentInfo.accountName || '';
-      accountNumberInput.value = paymentInfo.accountNumber || '';
+      try {
+        const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
+        bankNameInput.value = paymentInfo.bankName || '';
+        branchNameInput.value = paymentInfo.branchName || '';
+        accountNameInput.value = paymentInfo.accountName || '';
+        accountNumberInput.value = paymentInfo.accountNumber || '';
+      } catch (e) {
+        console.error('讀取繳租資訊失敗:', e);
+        alert('讀取已保存的繳租資訊失敗，請重新輸入！');
+      }
     });
 
-    // 儲存繳租資訊
+    // 儲存/更新繳租資訊 - 增強版
     savePaymentInfoBtn.addEventListener('click', () => {
-      // 驗證必填欄位
-      if (!bankNameInput.value || !branchNameInput.value || !accountNameInput.value || !accountNumberInput.value) {
-        alert('請填寫所有必填欄位！');
+      // 表單驗證
+      if (!validateForm()) {
         return;
       }
 
-      // 組裝資訊物件
-      const paymentInfo = {
-        bankName: bankNameInput.value.trim(),
-        branchName: branchNameInput.value.trim(),
-        accountName: accountNameInput.value.trim(),
-        accountNumber: accountNumberInput.value.trim()
-      };
+      // 禁用按鈕防止重複提交
+      savePaymentInfoBtn.disabled = true;
+      savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
 
-      // 儲存到本地存儲
-      localStorage.setItem('paymentInfo', JSON.stringify(paymentInfo));
+      try {
+        // 組裝資訊物件
+        const paymentInfo = {
+          bankName: bankNameInput.value.trim(),
+          branchName: branchNameInput.value.trim(),
+          accountName: accountNameInput.value.trim(),
+          accountNumber: accountNumberInput.value.trim(),
+          updateTime: new Date().toLocaleString('zh-TW') // 新增更新時間
+        };
 
-      // 顯示儲存成功提示
-      saveSuccess.style.display = 'block';
-      setTimeout(() => {
-        saveSuccess.style.display = 'none';
-      }, 2000);
+        // 儲存到本地存儲（覆蓋原有數據 = 更新）
+        localStorage.setItem('paymentInfo', JSON.stringify(paymentInfo));
+
+        // 顯示儲存成功提示
+        saveSuccess.style.display = 'block';
+        
+        // 2秒後重置按鈕和提示
+        setTimeout(() => {
+          saveSuccess.style.display = 'none';
+          savePaymentInfoBtn.disabled = false;
+          savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-save"></i> 儲存資訊';
+          
+          // 發送存儲成功的廣播，讓租客頁面實時更新（無需刷新）
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'paymentInfo',
+            newValue: JSON.stringify(paymentInfo)
+          }));
+        }, 2000);
+
+      } catch (e) {
+        console.error('儲存繳租資訊失敗:', e);
+        alert('儲存失敗，請稍後再試！');
+        
+        // 恢復按鈕狀態
+        savePaymentInfoBtn.disabled = false;
+        savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-save"></i> 儲存資訊';
+      }
+    });
+
+    // 即時清除錯誤提示（用戶輸入時）
+    [bankNameInput, branchNameInput, accountNameInput, accountNumberInput].forEach(input => {
+      input.addEventListener('input', () => {
+        input.classList.remove('error');
+        document.getElementById(`${input.id}Error`).style.display = 'none';
+      });
     });
   </script>
 </body>
