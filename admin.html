@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>廣大城租客管理 - 管理員後台</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="admin-header">
+    <h1 class="admin-title">廣大城租客管理 - 管理員後台</h1>
+    <button class="logout-btn">登出</button>
+  </div>
+
+  <!-- 統計卡片 -->
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3>總用戶數</h3>
+      <div class="value">0</div>
+      <div class="desc">已註冊租客</div>
+    </div>
+    <div class="stat-card">
+      <h3>總圖片數</h3>
+      <div class="value">0</div>
+      <div class="desc">所有相簿</div>
+    </div>
+    <div class="stat-card">
+      <h3>總繳費記錄</h3>
+      <div class="value">0</div>
+      <div class="desc">總繳費數</div>
+    </div>
+    <div class="stat-card">
+      <h3>總金額</h3>
+      <div class="value">$0</div>
+      <div class="desc">累計收入</div>
+    </div>
+  </div>
+
+  <!-- 後台標籤 -->
+  <div class="admin-tabs">
+    <div class="admin-tab active">用戶管理</div>
+    <div class="admin-tab">相簿管理</div>
+    <div class="admin-tab">繳費記錄管理</div>
+  </div>
+
+  <!-- 表格容器 -->
+  <div class="table-container">
+    <input type="text" class="search-input" placeholder="搜尋用戶姓名、電話或房間號...">
+    <div class="empty-text">暫無用戶資料</div>
+  </div>
+
+  <script>
+    // 後台標籤切換
+    const adminTabs = document.querySelectorAll('.admin-tab');
+    adminTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        adminTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

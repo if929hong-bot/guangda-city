@@ -1,0 +1,240 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Microsoft JhengHei", sans-serif;
+}
+
+body {
+  background-color: #f5f7fa;
+  padding: 20px;
+}
+
+/* 标题样式 */
+.page-title {
+  text-align: center;
+  color: #1f4e8c;
+  font-size: 28px;
+  margin: 30px 0 10px;
+}
+
+.page-subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 40px;
+}
+
+/* 卡片容器 */
+.card {
+  background: white;
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 卡片标题 */
+.card-header {
+  background-color: #1f4e8c;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 18px;
+}
+
+/* 标签页样式 */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 15px;
+  color: #666;
+  border-bottom: 2px solid transparent;
+}
+
+.tab.active {
+  color: #1f4e8c;
+  border-bottom-color: #1f4e8c;
+}
+
+/* 表单样式 */
+.form-container {
+  padding: 25px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+}
+
+.form-input::placeholder {
+  color: #999;
+}
+
+/* 按钮样式 */
+.btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #1f4e8c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  background-color: #183d6d;
+}
+
+/* 链接样式 */
+.link-text {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+.link-text a {
+  color: #1f4e8c;
+  text-decoration: none;
+}
+
+.link-text a:hover {
+  text-decoration: underline;
+}
+
+/* 管理员后台样式 */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto 30px;
+}
+
+.admin-title {
+  color: #1f4e8c;
+  font-size: 24px;
+}
+
+.logout-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn:hover {
+  background-color: #bb2d3b;
+}
+
+/* 统计卡片 */
+.stats-container {
+  display: flex;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 200px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-card .value {
+  font-size: 24px;
+  color: #1f4e8c;
+  font-weight: bold;
+}
+
+.stat-card .desc {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* 后台标签页 */
+.admin-tabs {
+  max-width: 1200px;
+  margin: 0 auto;
+  border-bottom: 1px solid #ddd;
+}
+
+.admin-tab {
+  display: inline-block;
+  padding: 12px 20px;
+  font-size: 15px;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.admin-tab.active {
+  color: #1f4e8c;
+  border-bottom-color: #1f4e8c;
+}
+
+/* 表格容器 */
+.table-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+
+.empty-text {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+  font-size: 16px;
+}

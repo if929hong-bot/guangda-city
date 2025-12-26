@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>廣大城租客管理 - 租客個人頁面</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 個人頁面擴展樣式 */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+    }
+    .profile-greeting {
+      display: flex;
+      align-items: center;
+    }
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #1f4e8c;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+    .profile-name {
+      font-size: 20px;
+      color: #333;
+    }
+    .profile-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .profile-cards {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      flex-wrap: wrap;
+    }
+    .profile-card {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .profile-card .label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .profile-card .value {
+      font-size: 22px;
+      color: #1f4e8c;
+      font-weight: bold;
+    }
+    .profile-card .desc {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+    .section {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 18px;
+      color: #1f4e8c;
+      font-weight: bold;
+    }
+    .btn-green {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-green:hover {
+      background-color: #218838;
+    }
+    .btn-blue {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-blue:hover {
+      background-color: #0069d9;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: #999;
+      font-size: 16px;
+    }
+    .empty-btn {
+      margin-top: 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .empty-btn.blue {
+      background-color: #007bff;
+    }
+    /* 彈窗樣式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none; /* 預設隱藏 */
+    }
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 800px;
+      border-radius: 8px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 15px 20px;
+      background-color: #1f4e8c;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+    }
+    .modal-form.full-width {
+      grid-template-columns: 1fr;
+    }
+    .modal-form-group {
+      margin-bottom: 10px;
+    }
+    .modal-form-group label {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    .modal-form-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .modal-form-note {
+      font-size: 12px;
+      color: #999;
+      margin-top: 3px;
+    }
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .modal-btn-cancel {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .modal-btn-confirm {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    /* 上傳圖片彈窗 */
+    .upload-modal .modal-form {
+      grid-template-columns: 1fr;
+    }
+    .file-input-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-input-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 個人頁面標頭 -->
+  <div class="profile-header">
+    <div class="profile-greeting">
+      <div class="profile-avatar">測</div>
+      <div>
+        <div class="profile-name">歡迎回來，測試</div>
+        <div class="profile-subtitle">廣大城租客管理系統</div>
+      </div>
+    </div>
+    <button class="logout-btn">登出</button>
+  </div>
+
+  <!-- 個人資訊卡片 -->
+  <div class="profile-cards">
+    <div class="profile-card">
+      <div class="label">姓名</div>
+      <div class="value">測試</div>
+      <div class="desc">租客資訊</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">房間</div>
+      <div class="value" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">A401</div>
+      <div class="desc">房間號碼</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">相簿圖片</div>
+      <div class="value">0</div>
+      <div class="desc">已上傳圖片數量</div>
+    </div>
+  </div>
+
+  <!-- 租約繳費紀錄區塊 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">租約繳費記錄</div>
+      <button class="btn-green" id="openPaymentModal">
+        <<i class="fa-solid fa-plus"></</i> 新增繳費記錄
+      </button>
+    </div>
+    <div class="empty-state">
+      尚無繳費記錄
+      <button class="empty-btn" id="openPaymentModal2">新增第一筆記錄</button>
+    </div>
+  </div>
+
+  <!-- 我的相簿區塊 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">我的相簿</div>
+      <button class="btn-blue" id="openUploadModal">
+        <<i class="fa-solid fa-plus"></</i> 上傳圖片
+      </button>
+    </div>
+    <div class="empty-state">
+      您還沒有上傳任何圖片
+      <button class="empty-btn blue" id="openUploadModal2">開始上傳</button>
+    </div>
+  </div>
+
+  <!-- 新增繳費記錄彈窗 -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">新增繳費記錄</div>
+        <button class="modal-close" id="closePaymentModal"><<i class="fa-solid fa-xmark"></</i></button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form">
+          <div class="modal-form-group">
+            <label for="rentalPeriod">租約期間 *</label>
+            <input type="text" id="rentalPeriod" class="modal-form-input" placeholder="例：2024/01 - 2024/12">
+          </div>
+          <div class="modal-form-group">
+            <label for="paymentPeriod">繳費區間 *</label>
+            <input type="text" id="paymentPeriod" class="modal-form-input" placeholder="例：2024/01/01 - 2024/01/31">
+          </div>
+          <div class="modal-form-group">
+            <label for="rent">房租</label>
+            <input type="text" id="rent" class="modal-form-input" placeholder="請輸入房租">
+          </div>
+          <div class="modal-form-group">
+            <label for="totalAmount">總金額（自動計算）</label>
+            <input type="text" id="totalAmount" class="modal-form-input" placeholder="" readonly>
+          </div>
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label>電費計算</label>
+          </div>
+          <div class="modal-form-group">
+            <label for="lastElectricity">上月電表度數</label>
+            <input type="text" id="lastElectricity" class="modal-form-input" placeholder="上月電表讀數">
+          </div>
+          <div class="modal-form-group">
+            <label for="currentElectricity">本月電表度數</label>
+            <input type="text" id="currentElectricity" class="modal-form-input" placeholder="本月電表讀數">
+          </div>
+          <div class="modal-form-group">
+            <label for="electricityUsage">用電量（度）</label>
+            <input type="text" id="electricityUsage" class="modal-form-input" placeholder="自動計算" readonly>
+            <div class="modal-form-note">本月電表 - 上月電表</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="electricityPrice">每度電費（元）</label>
+            <input type="text" id="electricityPrice" class="modal-form-input" placeholder="每度多少元">
+          </div>
+          <div class="modal-form-group">
+            <label for="electricityTotal">電費總價（自動計算）</label>
+            <input type="text" id="electricityTotal" class="modal-form-input" placeholder="" readonly>
+          </div>
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label>水費計算</label>
+          </div>
+          <div class="modal-form-group">
+            <label for="waterPeople">水費幾人</label>
+            <input type="text" id="waterPeople" class="modal-form-input" placeholder="請輸入人數">
+            <div class="modal-form-note">請輸入分攤人數</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="waterShare">備註幾人多少錢</label>
+            <input type="text" id="waterShare" class="modal-form-input" placeholder="例：3人共450元">
+            <div class="modal-form-note">說明分攤方式</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="waterTotal">總水費（元）</label>
+            <input type="text" id="waterTotal" class="modal-form-input" placeholder="請輸入總水費">
+            <div class="modal-form-note">請輸入應付水費金額</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="rentMonth">第幾個月房租</label>
+            <input type="text" id="rentMonth" class="modal-form-input" placeholder="例：第1個月">
+          </div>
+          <div class="modal-form-group">
+            <label for="paymentLast5">匯款後五碼</label>
+            <input type="text" id="paymentLast5" class="modal-form-input" placeholder="請輸入後五碼">
+          </div>
+          <div class="modal-form-group">
+            <label for="paymentDate">匯款日期</label>
+            <input type="date" id="paymentDate" class="modal-form-input">
+          </div>
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label for="paymentNote">備註（非必填）</label>
+            <textarea id="paymentNote" class="modal-form-input" rows="3" placeholder="請輸入備註內容"></textarea>
+            <div class="modal-form-note">可填寫其他相關備註</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-cancel" id="cancelPaymentModal">取消</button>
+        <button class="modal-btn-confirm">新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 上傳圖片彈窗 -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal upload-modal">
+      <div class="modal-header">
+        <div class="modal-title">上傳圖片</div>
+        <button class="modal-close" id="closeUploadModal"><<i class="fa-solid fa-xmark"></</i></button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form">
+          <div class="modal-form-group">
+            <label>選擇圖片</label>
+            <div class="file-input-container">
+              <button type="button" class="file-input-btn">選擇檔案</button>
+              <span>未選擇任何檔案</span>
+            </div>
+            <div class="modal-form-note">支援JPG、PNG格式，最大5MB</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-cancel" id="cancelUploadModal">取消</button>
+        <button class="modal-btn-confirm">上傳</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 彈窗控制
+    const paymentModal = document.getElementById('paymentModal');
+    const uploadModal = document.getElementById('uploadModal');
+    const openPaymentBtns = [document.getElementById('openPaymentModal'), document.getElementById('openPaymentModal2')];
+    const openUploadBtns = [document.getElementById('openUploadModal'), document.getElementById('openUploadModal2')];
+    const closePaymentModal = document.getElementById('closePaymentModal');
+    const cancelPaymentModal = document.getElementById('cancelPaymentModal');
+    const closeUploadModal = document.getElementById('closeUploadModal');
+    const cancelUploadModal = document.getElementById('cancelUploadModal');
+
+    // 打開新增繳費彈窗
+    openPaymentBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        paymentModal.style.display = 'flex';
+      });
+    });
+
+    // 關閉新增繳費彈窗
+    [closePaymentModal, cancelPaymentModal].forEach(btn => {
+      btn.addEventListener('click', () => {
+        paymentModal.style.display = 'none';
+      });
+    });
+
+    // 打開上傳圖片彈窗
+    openUploadBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        uploadModal.style.display = 'flex';
+      });
+    });
+
+    // 關閉上傳圖片彈窗
+    [closeUploadModal, cancelUploadModal].forEach(btn => {
+      btn.addEventListener('click', () => {
+        uploadModal.style.display = 'none';
+      });
+    });
+
+    // 點擊彈窗外層關閉
+    window.addEventListener('click', (e) => {
+      if (e.target === paymentModal) paymentModal.style.display = 'none';
+      if (e.target === uploadModal) uploadModal.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
