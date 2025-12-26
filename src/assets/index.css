@@ -1,0 +1,13 @@
+/* 重置默認樣式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Microsoft JhengHei", sans-serif;
+}
+
+/* 全局背景/字體設置 */
+body {
+  background-color: #f5f7fa;
+  color: #333;
+}
