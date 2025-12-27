@@ -115,8 +115,9 @@
         tenants.push(formData);
         localStorage.setItem('gdcTenants', JSON.stringify(tenants));
 
-        alert('註冊成功！已為您創建房號文件夾');
-        window.location.href = 'index.html';
+        alert('註冊成功！您可直接使用註冊的電話和密碼登入');
+        // 核心修改：跳轉到指定的登入頁地址
+        window.location.href = 'https://guangda-city.vercel.app/';
       } catch (error) {
         console.error('註冊失敗：', error);
         alert('網路錯誤，請稍後再試！');
