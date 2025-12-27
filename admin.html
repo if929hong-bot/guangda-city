@@ -453,8 +453,18 @@
         alert('讀取已保存的繳租資訊失敗，請重新輸入！');
       }
 
-      // 加載租客列表（新增邏輯，不影響原有代碼）
+      // 加載租客列表（核心修復：優化數據讀取和渲染）
       loadTenantList();
+
+      // 綁定搜索事件（移到這裡，避免重複綁定）
+      document.getElementById('tenantSearch').addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#tenantTableBody tr');
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(keyword) ? '' : 'none';
+        });
+      });
     });
 
     // 儲存/更新繳租資訊 - 增強版
@@ -515,9 +525,22 @@
       });
     });
 
-    // ========== 新增租客列表加載邏輯（不影響原有代碼） ==========
+    // ========== 核心修復：租客列表加載邏輯 ==========
     function loadTenantList() {
-      const tenants = JSON.parse(localStorage.getItem('gdcTenants') || '[]');
+      // 兼容 LocalStorage 讀取錯誤
+      let tenants = [];
+      try {
+        const storedTenants = localStorage.getItem('gdcTenants');
+        if (storedTenants) {
+          tenants = JSON.parse(storedTenants);
+          // 確保是數組
+          if (!Array.isArray(tenants)) tenants = [];
+        }
+      } catch (e) {
+        console.error('讀取租客列表失敗:', e);
+        tenants = [];
+      }
+
       const emptyText = document.getElementById('emptyTenantText');
       const tenantTable = document.getElementById('tenantTable');
       const tenantTableBody = document.getElementById('tenantTableBody');
@@ -541,30 +564,26 @@
       // 渲染租客列表
       tenants.forEach(tenant => {
         const tr = document.createElement('tr');
+        // 防呆：確保屬性存在
+        const name = tenant.name || '未填寫';
+        const phone = tenant.phone || '未填寫';
+        const email = tenant.email || '未填寫';
+        const room = tenant.room || '未填寫';
+
         tr.innerHTML = `
-          <td>${tenant.name}</td>
-          <td>${tenant.phone}</td>
-          <td>${tenant.email}</td>
-          <td>${tenant.room}</td>
-          <td><a href="https://mega.nz/fm/Dt4TAKJB#${tenant.room}" target="_blank" class="mega-link">查看${tenant.room}文件夾</a></td>
-          <td><button class="btn-view-images" onclick="viewTenantImages('${tenant.room}')">查看圖片</button></td>
+          <td>${name}</td>
+          <td>${phone}</td>
+          <td>${email}</td>
+          <td>${room}</td>
+          <td><a href="https://mega.nz/fm/Dt4TAKJB#${room}" target="_blank" class="mega-link">查看${room}文件夾</a></td>
+          <td><button class="btn-view-images" onclick="viewTenantImages('${room}')">查看圖片</button></td>
         `;
         tenantTableBody.appendChild(tr);
-      });
-
-      // 搜索功能
-      document.getElementById('tenantSearch').addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase().trim();
-        const rows = tenantTableBody.querySelectorAll('tr');
-        rows.forEach(row => {
-          const text = row.textContent.toLowerCase();
-          row.style.display = text.includes(keyword) ? '' : 'none';
-        });
       });
     }
 
     // 查看租客上傳的圖片
-    async function viewTenantImages(room) {
+    window.viewTenantImages = async function(room) {
       try {
         const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
           method: 'GET'

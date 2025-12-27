@@ -317,6 +317,22 @@
       height: 150px;
       object-fit: cover;
     }
+    /* 登出按鈕樣式補充 */
+    .logout-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
   </style>
 </head>
 <body>
@@ -329,7 +345,9 @@
         <div class="profile-subtitle">廣大城租客管理系統</div>
       </div>
     </div>
-    <button class="logout-btn">登出</button>
+    <button class="logout-btn" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> 登出
+    </button>
   </div>
 
   <!-- 個人資訊卡片 -->
@@ -588,10 +606,14 @@
       if (e.target === uploadModal) uploadModal.style.display = 'none';
     });
 
-    // 租客頁面登出功能
-    document.querySelector('.logout-btn').addEventListener('click', () => {
+    // 租客頁面登出功能（核心修復：清除登入狀態）
+    document.getElementById('logoutBtn').addEventListener('click', () => {
       if (confirm('確定要登出嗎？')) {
-        window.location.href = 'index.html'; // 返回登入頁面（修正為index.html）
+        // 清除本地存儲的登入狀態
+        localStorage.removeItem('currentTenant');
+        sessionStorage.removeItem('currentTenant');
+        // 跳轉到登入頁
+        window.location.href = 'index.html';
       }
     });
 
@@ -628,21 +650,29 @@
       });
     }
 
-    // ========== 新增租客個人信息加載 + 圖片上傳邏輯 ==========
+    // ========== 核心修復：租客個人信息加載 + 登入驗證 ==========
     // 加載當前租客信息
     function loadTenantProfile() {
-      // 從LocalStorage獲取當前登錄租客（登入頁需存儲）
-      const currentTenant = JSON.parse(sessionStorage.getItem('currentTenant') || localStorage.getItem('currentTenant') || '{}');
-      if (!currentTenant.name || !currentTenant.room) {
-        // 若未登錄，跳轉到登入頁
-        alert('請先登入！');
+      // 優先從 localStorage/sessionStorage 獲取當前登錄租客
+      let currentTenant = null;
+      try {
+        currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || 
+                        JSON.parse(sessionStorage.getItem('currentTenant'));
+      } catch (e) {
+        console.error('讀取租客信息失敗：', e);
+        currentTenant = null;
+      }
+
+      // 驗證登入狀態（核心修復：嚴格驗證）
+      if (!currentTenant || !currentTenant.name || !currentTenant.phone || !currentTenant.room) {
+        alert('您尚未登入，請先登入系統！');
         window.location.href = 'index.html';
         return;
       }
 
-      // 更新頁面顯示的個人信息
+      // 更新頁面顯示的個人信息（核心修復：動態填充真實數據）
       document.getElementById('profileName').textContent = `歡迎回來，${currentTenant.name}`;
-      document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0);
+      document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0) || '租';
       document.getElementById('cardName').textContent = currentTenant.name;
       document.getElementById('cardRoom').textContent = currentTenant.room;
 
@@ -679,11 +709,12 @@
         result.data.forEach(img => {
           const imageItem = document.createElement('div');
           imageItem.className = 'image-item';
-          imageItem.innerHTML = `<img src="${img.url}" alt="${img.name}">`;
+          imageItem.innerHTML = `<img src="${img.url}" alt="${img.name || `房號${room}圖片`}">`;
           imagesGrid.appendChild(imageItem);
         });
       } catch (error) {
         console.error('加載圖片失敗：', error);
+        document.getElementById('cardImageCount').textContent = '0';
       }
     }
 
@@ -704,8 +735,8 @@
     // 確認上傳圖片
     document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
       const files = document.getElementById('fileInput').files;
-      const currentTenant = JSON.parse(sessionStorage.getItem('currentTenant') || localStorage.getItem('currentTenant') || '{}');
-      const room = currentTenant.room;
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || JSON.parse(sessionStorage.getItem('currentTenant'));
+      const room = currentTenant?.room;
 
       if (files.length === 0) {
         alert('請選擇要上傳的圖片！');
@@ -713,6 +744,7 @@
       }
       if (!room) {
         alert('無法獲取房號，請重新登入！');
+        window.location.href = 'index.html';
         return;
       }
 
@@ -758,13 +790,20 @@
       }
     });
 
-    // 頁面加載時執行
+    // 頁面加載時執行（核心修復：優先驗證登入狀態）
     window.addEventListener('load', () => {
+      // 第一步：驗證並加載租客信息
+      loadTenantProfile();
+      // 第二步：加載銀行資訊
       loadBankInfo();
-      loadTenantProfile(); // 加載租客信息
     });
+
     // 監聽本地存儲變化，即時更新銀行資訊
-    window.addEventListener('storage', loadBankInfo);
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'paymentInfo') {
+        loadBankInfo();
+      }
+    });
   </script>
 </body>
 </html>

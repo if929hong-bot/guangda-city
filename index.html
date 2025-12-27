@@ -80,7 +80,7 @@
       });
     });
 
-    // 登入按鈕點擊事件（補充租客真實信息驗證）
+    // 登入按鈕點擊事件（補充租客真實信息驗證 + 優化邊界處理）
     loginBtn.addEventListener('click', () => {
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -88,6 +88,12 @@
       // 驗證輸入是否為空
       if (!phone || !password) {
         alert('請輸入電話號碼和密碼！');
+        return;
+      }
+
+      // 驗證電話格式（10位數字）
+      if (!/^\d{10}$/.test(phone)) {
+        alert('電話號碼必須為10位數字！');
         return;
       }
 
@@ -105,8 +111,18 @@
           alert('管理員帳號或密碼錯誤！');
         }
       } else {
-        // 租客登入（驗證LocalStorage中的真實信息）
-        const tenants = JSON.parse(localStorage.getItem('gdcTenants') || '[]');
+        // 租客登入（驗證LocalStorage中的真實信息 + 兼容數據格式）
+        let tenants = [];
+        const storedTenants = localStorage.getItem('gdcTenants');
+        if (storedTenants) {
+          try {
+            tenants = JSON.parse(storedTenants);
+            if (!Array.isArray(tenants)) tenants = [];
+          } catch (e) {
+            tenants = [];
+          }
+        }
+
         const tenant = tenants.find(t => t.phone === phone && t.password === password);
         
         if (tenant) {
@@ -119,7 +135,7 @@
           alert('租客電話或密碼錯誤！');
         }
       }
-    }); // 補充：閉合 addEventListener 的回調函數
-  </script> <!-- 確保 script 標籤正常閉合 -->
+    });
+  </script>
 </body>
 </html>
