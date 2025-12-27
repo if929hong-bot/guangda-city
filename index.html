@@ -38,6 +38,10 @@
         <input type="password" id="password" class="form-input" placeholder="請輸入密碼">
       </div>
       <button class="btn" id="loginBtn">登入</button>
+      <!-- 新增忘記密碼連結 -->
+      <div class="link-text" id="forgotPasswordLink" style="margin-top: 8px;">
+        <a href="forgot-password.html" style="color: #007bff; text-decoration: none;">忘記密碼？</a>
+      </div>
       <div class="link-text" id="registerLink">
         還沒有帳戶？ <a href="register.html">立即註冊</a>
       </div>
@@ -50,6 +54,7 @@
     const tenantTab = document.getElementById('tenantTab');
     const adminTab = document.getElementById('adminTab');
     const registerLink = document.getElementById('registerLink');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink'); // 新增忘記密碼元素
     const loginBtn = document.getElementById('loginBtn');
     
     // 管理員帳號密碼列表
@@ -58,14 +63,20 @@
       { phone: '0975521219', password: 'gdc0975521219' }
     ];
 
-    // 標籤切換邏輯（原始程式不變，僅加隱藏註冊+紫色樣式）
+    // 標籤切換邏輯（新增隱藏忘記密碼）
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         
-        // 僅新增：管理員頁面隱藏註冊連結
-        registerLink.style.display = tab === adminTab ? 'none' : 'block';
+        // 管理員頁面隱藏註冊和忘記密碼連結
+        if (tab === adminTab) {
+          registerLink.style.display = 'none';
+          forgotPasswordLink.style.display = 'none';
+        } else {
+          registerLink.style.display = 'block';
+          forgotPasswordLink.style.display = 'block';
+        }
       });
     });
 
