@@ -88,22 +88,8 @@
       registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
 
       try {
-        // 1. 調用後端創建MEGA房號文件夾（你的Vercel域名）
-        const folderRes = await fetch('https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/create-room-folder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ roomNumber: formData.room })
-        });
-        const folderResult = await folderRes.json();
-
-        if (!folderResult.success) {
-          alert('文件夾創建失敗：' + folderResult.message);
-          registerBtn.disabled = false;
-          registerBtn.innerHTML = '註冊';
-          return;
-        }
-
-        // 2. 存儲租客信息到LocalStorage（供Admin/登入頁讀取）
+        // 移除後端接口請求（解決網路錯誤核心）
+        // 直接處理LocalStorage存儲邏輯
         const tenants = JSON.parse(localStorage.getItem('gdcTenants') || '[]');
         // 檢查重複房號/電話
         if (tenants.some(t => t.phone === formData.phone || t.room === formData.room)) {
@@ -116,11 +102,11 @@
         localStorage.setItem('gdcTenants', JSON.stringify(tenants));
 
         alert('註冊成功！您可直接使用註冊的電話和密碼登入');
-        // 核心修改：跳轉到指定的登入頁地址
+        // 跳轉到指定登入頁
         window.location.href = 'https://guangda-city.vercel.app/';
       } catch (error) {
-        console.error('註冊失敗：', error);
-        alert('網路錯誤，請稍後再試！');
+        console.error('註冊失敗詳細信息：', error);
+        alert(`註冊失敗：${error.message}，請稍後再試！`);
       } finally {
         registerBtn.disabled = false;
         registerBtn.innerHTML = '註冊';
