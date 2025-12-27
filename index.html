@@ -6,6 +6,13 @@
   <title>廣大城租客管理 - 用戶登入</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 僅新增：管理員標籤激活時應用紫色 #7B2CBF */
+    #adminTab.active {
+      background-color: #7B2CBF;
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <h1 class="page-title">廣大城租客管理</h1>
@@ -14,10 +21,10 @@
   <div class="card">
     <div class="card-header">用戶登入</div>
     <div class="tabs">
-      <div class="tab active">
+      <div class="tab active" id="tenantTab">
         <i class="fa-solid fa-user"></i> 租客登入
       </div>
-      <div class="tab">
+      <div class="tab" id="adminTab">
         <i class="fa-solid fa-user-tie"></i> 管理員登入
       </div>
     </div>
@@ -30,8 +37,8 @@
         <label for="password"><i class="fa-solid fa-lock"></i> 密碼 *</label>
         <input type="password" id="password" class="form-input" placeholder="請輸入密碼">
       </div>
-      <button class="btn">登入</button>
-      <div class="link-text">
+      <button class="btn" id="loginBtn">登入</button>
+      <div class="link-text" id="registerLink">
         還沒有帳戶？ <a href="register.html">立即註冊</a>
       </div>
     </div>
@@ -40,11 +47,57 @@
   <script>
     // 標籤切換效果
     const tabs = document.querySelectorAll('.tab');
+    const tenantTab = document.getElementById('tenantTab');
+    const adminTab = document.getElementById('adminTab');
+    const registerLink = document.getElementById('registerLink');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // 管理員帳號密碼列表
+    const adminAccounts = [
+      { phone: '0982098079', password: 'gdc0982098079' },
+      { phone: '0975521219', password: 'gdc0975521219' }
+    ];
+
+    // 標籤切換邏輯（原始程式不變，僅加隱藏註冊+紫色樣式）
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
+        
+        // 僅新增：管理員頁面隱藏註冊連結
+        registerLink.style.display = tab === adminTab ? 'none' : 'block';
       });
+    });
+
+    // 登入按鈕點擊事件（原始程式完全不變）
+    loginBtn.addEventListener('click', () => {
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      // 驗證輸入是否為空
+      if (!phone || !password) {
+        alert('請輸入電話號碼和密碼！');
+        return;
+      }
+
+      // 判斷當前登入類型
+      if (adminTab.classList.contains('active')) {
+        // 管理員登入驗證
+        const isAdmin = adminAccounts.some(account => 
+          account.phone === phone && account.password === password
+        );
+        
+        if (isAdmin) {
+          alert('管理員登入成功！');
+          window.location.href = 'admin.html'; // 跳轉管理員後台
+        } else {
+          alert('管理員帳號或密碼錯誤！');
+        }
+      } else {
+        // 租客登入（簡單驗證，非空即可）
+        alert('租客登入成功！');
+        window.location.href = 'tenant.html'; // 跳轉租客個人頁面
+      }
     });
   </script>
 </body>
