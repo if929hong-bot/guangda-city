@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>廣大城租客管理 - 租客個人頁面</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 個人頁面擴展樣式 */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+    }
+    .profile-greeting {
+      display: flex;
+      align-items: center;
+    }
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #1f4e8c;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+    .profile-name {
+      font-size: 20px;
+      color: #333;
+    }
+    .profile-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .profile-cards {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      flex-wrap: wrap;
+    }
+    .profile-card {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .profile-card .label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .profile-card .value {
+      font-size: 22px;
+      color: #1f4e8c;
+      font-weight: bold;
+    }
+    .profile-card .desc {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+    .section {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 18px;
+      color: #1f4e8c;
+      font-weight: bold;
+    }
+    .btn-green {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-green:hover {
+      background-color: #218838;
+    }
+    .btn-blue {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-blue:hover {
+      background-color: #0069d9;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: #999;
+      font-size: 16px;
+    }
+    .empty-btn {
+      margin-top: 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .empty-btn.blue {
+      background-color: #007bff;
+    }
+    /* 彈窗樣式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none; /* 預設隱藏 */
+    }
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 800px;
+      border-radius: 8px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 15px 20px;
+      background-color: #1f4e8c;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+    }
+    .modal-form.full-width {
+      grid-template-columns: 1fr;
+    }
+    .modal-form-group {
+      margin-bottom: 10px;
+    }
+    .modal-form-group label {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    .modal-form-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .modal-form-note {
+      font-size: 12px;
+      color: #999;
+      margin-top: 3px;
+    }
+    .modal-footer {
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .modal-btn-cancel {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .modal-btn-confirm {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    /* 上傳圖片彈窗 */
+    .upload-modal .modal-form {
+      grid-template-columns: 1fr;
+    }
+    .file-input-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-input-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    /* 繳租銀行資訊樣式 */
+    .payment-bank-info {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .bank-info-title {
+      font-size: 18px;
+      color: #1f4e8c;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .bank-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+    }
+    .bank-info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .bank-info-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .bank-info-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+      padding: 8px 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+    .bank-info-empty {
+      color: #999;
+      font-size: 14px;
+      padding: 20px 0;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+    /* 新增圖片展示樣式 */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .image-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .image-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    /* 登出按鈕樣式補充 */
+    .logout-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <!-- 個人頁面標頭 -->
+  <div class="profile-header">
+    <div class="profile-greeting">
+      <div class="profile-avatar" id="profileAvatar">測</div>
+      <div>
+        <div class="profile-name" id="profileName">歡迎回來，測試</div>
+        <div class="profile-subtitle">廣大城租客管理系統</div>
+      </div>
+    </div>
+    <button class="logout-btn" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> 登出
+    </button>
+  </div>
+
+  <!-- 個人資訊卡片 -->
+  <div class="profile-cards">
+    <div class="profile-card">
+      <div class="label">姓名</div>
+      <div class="value" id="cardName">測試</div>
+      <div class="desc">租客資訊</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">房間</div>
+      <div class="value" id="cardRoom" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">A401</div>
+      <div class="desc">房間號碼</div>
+    </div>
+    <div class="profile-card">
+      <div class="label">相簿圖片</div>
+      <div class="value" id="cardImageCount">0</div>
+      <div class="desc">已上傳圖片數量</div>
+    </div>
+  </div>
+
+  <!-- 繳租銀行資訊區塊 -->
+  <div class="payment-bank-info">
+    <div class="bank-info-title">繳租銀行資訊</div>
+    <div class="bank-info-grid" id="bankInfoGrid">
+      <!-- 動態加載銀行資訊 -->
+    </div>
+  </div>
+
+  <!-- 租約繳費紀錄區塊 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">租約繳費記錄</div>
+      <button class="btn-green" id="openPaymentModal">
+        <i class="fa-solid fa-plus"></i> 新增繳費記錄
+      </button>
+    </div>
+    <div class="empty-state">
+      尚無繳費記錄
+      <button class="empty-btn" id="openPaymentModal2">新增第一筆記錄</button>
+    </div>
+  </div>
+
+  <!-- 我的相簿區塊 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">我的相簿</div>
+      <button class="btn-blue" id="openUploadModal">
+        <i class="fa-solid fa-plus"></i> 上傳圖片
+      </button>
+    </div>
+    <div class="empty-state" id="imagesEmptyState">
+      您還沒有上傳任何圖片
+      <button class="empty-btn blue" id="openUploadModal2">開始上傳</button>
+    </div>
+    <!-- 新增圖片展示區 -->
+    <div class="images-grid" id="imagesGrid" style="display: none;"></div>
+  </div>
+
+  <!-- 新增繳費記錄彈窗 -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">新增繳費記錄</div>
+        <button class="modal-close" id="closePaymentModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form">
+          <div class="modal-form-group">
+            <label for="rentalPeriod">租約期間 *</label>
+            <input type="text" id="rentalPeriod" class="modal-form-input" placeholder="例：2024/01 - 2024/12">
+          </div>
+          <div class="modal-form-group">
+            <label for="paymentPeriod">繳費區間 *</label>
+            <input type="text" id="paymentPeriod" class="modal-form-input" placeholder="例：2024/01/01 - 2024/01/31">
+          </div>
+          <div class="modal-form-group">
+            <label for="rent">房租</label>
+            <input type="number" id="rent" class="modal-form-input" placeholder="請輸入房租" oninput="calculateTotal()">
+          </div>
+          <div class="modal-form-group">
+            <label for="totalAmount">總金額（自動計算）</label>
+            <input type="text" id="totalAmount" class="modal-form-input" placeholder="" readonly>
+          </div>
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label>電費計算</label>
+          </div>
+          <div class="modal-form-group">
+            <label for="lastElectricity">上月電表度數</label>
+            <input type="number" id="lastElectricity" class="modal-form-input" placeholder="上月電表讀數" oninput="calculateElectricity()">
+          </div>
+          <div class="modal-form-group">
+            <label for="currentElectricity">本月電表度數</label>
+            <input type="number" id="currentElectricity" class="modal-form-input" placeholder="本月電表讀數" oninput="calculateElectricity()">
+          </div>
+          <div class="modal-form-group">
+            <label for="electricityUsage">用電量（度）</label>
+            <input type="text" id="electricityUsage" class="modal-form-input" placeholder="自動計算" readonly>
+            <div class="modal-form-note">本月電表 - 上月電表</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="electricityPrice">每度電費（元）</label>
+            <input type="number" id="electricityPrice" class="modal-form-input" placeholder="每度多少元" oninput="calculateElectricity()">
+          </div>
+          <div class="modal-form-group">
+            <label for="electricityTotal">電費總價（自動計算）</label>
+            <input type="text" id="electricityTotal" class="modal-form-input" placeholder="" readonly>
+          </div>
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label>水費計算</label>
+          </div>
+          <div class="modal-form-group">
+            <label for="waterPeople">水費幾人</label>
+            <input type="number" id="waterPeople" class="modal-form-input" placeholder="請輸入人數" oninput="calculateTotal()">
+            <div class="modal-form-note">請輸入分攤人數</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="waterShare">備註幾人多少錢</label>
+            <input type="text" id="waterShare" class="modal-form-input" placeholder="例：3人共450元">
+            <div class="modal-form-note">說明分攤方式</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="waterTotal">總水費（元）</label>
+            <input type="number" id="waterTotal" class="modal-form-input" placeholder="請輸入總水費" oninput="calculateTotal()">
+            <div class="modal-form-note">請輸入應付水費金額</div>
+          </div>
+          <div class="modal-form-group">
+            <label for="rentMonth">第幾個月房租</label>
+            <input type="text" id="rentMonth" class="modal-form-input" placeholder="例：第1個月">
+          </div>
+          <div class="modal-form-group">
+            <label for="paymentLast5">匯款後五碼</label>
+            <input type="text" id="paymentLast5" class="modal-form-input" placeholder="請輸入後五碼">
+          </div>
+          <div class="modal-form-group">
+            <label for="paymentDate">匯款日期</label>
+            <input type="date" id="paymentDate" class="modal-form-input">
+          </div>
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label for="paymentNote">備註（非必填）</label>
+            <textarea id="paymentNote" class="modal-form-input" rows="3" placeholder="請輸入備註內容"></textarea>
+            <div class="modal-form-note">可填寫其他相關備註</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-cancel" id="cancelPaymentModal">取消</button>
+        <button class="modal-btn-confirm">新增</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 上傳圖片彈窗 -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal upload-modal">
+      <div class="modal-header">
+        <div class="modal-title">上傳圖片</div>
+        <button class="modal-close" id="closeUploadModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form">
+          <div class="modal-form-group">
+            <label>選擇圖片</label>
+            <div class="file-input-container">
+              <button type="button" class="file-input-btn" id="selectFileBtn">選擇檔案</button>
+              <span id="fileSelectedText">未選擇任何檔案</span>
+              <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+            </div>
+            <div class="modal-form-note">支援JPG、PNG格式，最大5MB</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-cancel" id="cancelUploadModal">取消</button>
+        <button class="modal-btn-confirm" id="confirmUploadBtn">上傳</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 電費自動計算函數
+    function calculateElectricity() {
+      // 获取输入值（转数字，空值设为0）
+      const lastElectricity = parseFloat(document.getElementById('lastElectricity').value) || 0;
+      const currentElectricity = parseFloat(document.getElementById('currentElectricity').value) || 0;
+      const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0;
+      
+      // 計算用電量（本月 - 上月，最小為0）
+      const electricityUsage = Math.max(0, currentElectricity - lastElectricity);
+      // 計算電費總價（用電量 * 每度電費）
+      const electricityTotal = electricityUsage * electricityPrice;
+      
+      // 填充計算結果（保留2位小數）
+      document.getElementById('electricityUsage').value = electricityUsage.toFixed(1);
+      document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
+      
+      // 同步更新總金額
+      calculateTotal();
+    }
+
+    // 總金額自動計算函數（房租 + 電費 + 水費）
+    function calculateTotal() {
+      // 获取各項金額
+      const rent = parseFloat(document.getElementById('rent').value) || 0;
+      const electricityTotal = parseFloat(document.getElementById('electricityTotal').value) || 0;
+      const waterTotal = parseFloat(document.getElementById('waterTotal').value) || 0;
+      
+      // 計算總金額
+      const totalAmount = rent + electricityTotal + waterTotal;
+      
+      // 填充總金額（保留2位小數）
+      document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+    }
+
+    // 彈窗控制
+    const paymentModal = document.getElementById('paymentModal');
+    const uploadModal = document.getElementById('uploadModal');
+    const openPaymentBtns = [document.getElementById('openPaymentModal'), document.getElementById('openPaymentModal2')];
+    const openUploadBtns = [document.getElementById('openUploadModal'), document.getElementById('openUploadModal2')];
+    const closePaymentModal = document.getElementById('closePaymentModal');
+    const cancelPaymentModal = document.getElementById('cancelPaymentModal');
+    const closeUploadModal = document.getElementById('closeUploadModal');
+    const cancelUploadModal = document.getElementById('cancelUploadModal');
+
+    // 打開新增繳費彈窗
+    openPaymentBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        paymentModal.style.display = 'flex';
+      });
+    });
+
+    // 關閉新增繳費彈窗
+    [closePaymentModal, cancelPaymentModal].forEach(btn => {
+      btn.addEventListener('click', () => {
+        paymentModal.style.display = 'none';
+      });
+    });
+
+    // 打開上傳圖片彈窗
+    openUploadBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        uploadModal.style.display = 'flex';
+      });
+    });
+
+    // 關閉上傳圖片彈窗
+    [closeUploadModal, cancelUploadModal].forEach(btn => {
+      btn.addEventListener('click', () => {
+        uploadModal.style.display = 'none';
+      });
+    });
+
+    // 點擊彈窗外層關閉
+    window.addEventListener('click', (e) => {
+      if (e.target === paymentModal) paymentModal.style.display = 'none';
+      if (e.target === uploadModal) uploadModal.style.display = 'none';
+    });
+
+    // 租客頁面登出功能（核心修復：清除登入狀態）
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (confirm('確定要登出嗎？')) {
+        // 清除本地存儲的登入狀態
+        localStorage.removeItem('currentTenant');
+        sessionStorage.removeItem('currentTenant');
+        // 跳轉到登入頁
+        window.location.href = 'index.html';
+      }
+    });
+
+    // 加載並顯示繳租銀行資訊
+    function loadBankInfo() {
+      const bankInfoGrid = document.getElementById('bankInfoGrid');
+      const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
+      
+      // 清空原有內容
+      bankInfoGrid.innerHTML = '';
+      
+      // 判斷是否有儲存的銀行資訊
+      if (!paymentInfo.bankName || !paymentInfo.branchName || !paymentInfo.accountName || !paymentInfo.accountNumber) {
+        bankInfoGrid.innerHTML = '<div class="bank-info-empty">管理員尚未設定繳租銀行資訊</div>';
+        return;
+      }
+      
+      // 動態生成銀行資訊展示項
+      const bankInfoItems = [
+        { label: '銀行名稱', value: paymentInfo.bankName },
+        { label: '分行名稱', value: paymentInfo.branchName },
+        { label: '戶名', value: paymentInfo.accountName },
+        { label: '銀行帳號', value: paymentInfo.accountNumber }
+      ];
+      
+      bankInfoItems.forEach(item => {
+        const infoItem = document.createElement('div');
+        infoItem.className = 'bank-info-item';
+        infoItem.innerHTML = `
+          <span class="bank-info-label">${item.label}</span>
+          <span class="bank-info-value">${item.value}</span>
+        `;
+        bankInfoGrid.appendChild(infoItem);
+      });
+    }
+
+    // ========== 核心修復：租客個人信息加載 + 登入驗證 ==========
+    // 加載當前租客信息
+    function loadTenantProfile() {
+      // 優先從 localStorage/sessionStorage 獲取當前登錄租客
+      let currentTenant = null;
+      try {
+        currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || 
+                        JSON.parse(sessionStorage.getItem('currentTenant'));
+      } catch (e) {
+        console.error('讀取租客信息失敗：', e);
+        currentTenant = null;
+      }
+
+      // 驗證登入狀態（核心修復：嚴格驗證）
+      if (!currentTenant || !currentTenant.name || !currentTenant.phone || !currentTenant.room) {
+        alert('您尚未登入，請先登入系統！');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 更新頁面顯示的個人信息（核心修復：動態填充真實數據）
+      document.getElementById('profileName').textContent = `歡迎回來，${currentTenant.name}`;
+      document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0) || '租';
+      document.getElementById('cardName').textContent = currentTenant.name;
+      document.getElementById('cardRoom').textContent = currentTenant.room;
+
+      // 加載租客已上傳的圖片
+      loadTenantImages(currentTenant.room);
+    }
+
+    // 加載租客已上傳的圖片
+    async function loadTenantImages(room) {
+      try {
+        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
+          method: 'GET'
+        });
+        const result = await res.json();
+
+        const emptyState = document.getElementById('imagesEmptyState');
+        const imagesGrid = document.getElementById('imagesGrid');
+        const cardImageCount = document.getElementById('cardImageCount');
+
+        if (!result.success || result.data.length === 0) {
+          emptyState.style.display = 'block';
+          imagesGrid.style.display = 'none';
+          cardImageCount.textContent = '0';
+          return;
+        }
+
+        // 顯示圖片列表
+        emptyState.style.display = 'none';
+        imagesGrid.style.display = 'grid';
+        cardImageCount.textContent = result.data.length;
+        imagesGrid.innerHTML = '';
+
+        // 渲染圖片
+        result.data.forEach(img => {
+          const imageItem = document.createElement('div');
+          imageItem.className = 'image-item';
+          imageItem.innerHTML = `<img src="${img.url}" alt="${img.name || `房號${room}圖片`}">`;
+          imagesGrid.appendChild(imageItem);
+        });
+      } catch (error) {
+        console.error('加載圖片失敗：', error);
+        document.getElementById('cardImageCount').textContent = '0';
+      }
+    }
+
+    // 圖片上傳按鈕綁定
+    document.getElementById('selectFileBtn').addEventListener('click', () => {
+      document.getElementById('fileInput').click();
+    });
+
+    // 選擇文件後更新顯示文本
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const files = e.target.files;
+      const text = files.length === 0 ? '未選擇任何檔案' : 
+                   files.length === 1 ? `已選擇：${files[0].name}` : 
+                   `已選擇${files.length}個檔案`;
+      document.getElementById('fileSelectedText').textContent = text;
+    });
+
+    // 確認上傳圖片
+    document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
+      const files = document.getElementById('fileInput').files;
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || JSON.parse(sessionStorage.getItem('currentTenant'));
+      const room = currentTenant?.room;
+
+      if (files.length === 0) {
+        alert('請選擇要上傳的圖片！');
+        return;
+      }
+      if (!room) {
+        alert('無法獲取房號，請重新登入！');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 禁用按鈕
+      const confirmBtn = document.getElementById('confirmUploadBtn');
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '上傳中...';
+
+      try {
+        // 構建FormData
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+          formData.append('images', files[i]);
+        }
+        formData.append('room', room);
+
+        // 調用後端上傳接口
+        const res = await fetch('https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          alert(`成功上傳${result.data.length}張圖片！`);
+          // 關閉彈窗
+          uploadModal.style.display = 'none';
+          // 重置文件選擇
+          document.getElementById('fileInput').value = '';
+          document.getElementById('fileSelectedText').textContent = '未選擇任何檔案';
+          // 重新加載圖片
+          loadTenantImages(room);
+        } else {
+          alert('上傳失敗：' + result.message);
+        }
+      } catch (error) {
+        console.error('上傳失敗：', error);
+        alert('網路錯誤，請稍後再試！');
+      } finally {
+        // 恢復按鈕
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '上傳';
+      }
+    });
+
+    // 頁面加載時執行（核心修復：優先驗證登入狀態）
+    window.addEventListener('load', () => {
+      // 第一步：驗證並加載租客信息
+      loadTenantProfile();
+      // 第二步：加載銀行資訊
+      loadBankInfo();
+    });
+
+    // 監聽本地存儲變化，即時更新銀行資訊
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'paymentInfo') {
+        loadBankInfo();
+      }
+    });
+  </script>
+</body>
+</html>
