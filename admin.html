@@ -243,6 +243,35 @@
       padding: 40px 0;
       font-size: 14px;
     }
+
+    /* 新增租客列表表格樣式（不影響原有樣式） */
+    .tenant-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .tenant-table th, .tenant-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    .tenant-table th {
+      background-color: #f8f9fa;
+      color: #1f4e8c;
+    }
+    .tenant-table .btn-view-images {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .tenant-table .mega-link {
+      color: #007bff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -290,12 +319,12 @@
   <div class="stats-container">
     <div class="stat-card">
       <h3>總用戶數</h3>
-      <div class="value">0</div>
+      <div class="value" id="totalTenants">0</div>
       <div class="desc">已註冊租客</div>
     </div>
     <div class="stat-card">
       <h3>總圖片數</h3>
-      <div class="value">0</div>
+      <div class="value" id="totalImages">0</div>
       <div class="desc">所有相簿</div>
     </div>
     <div class="stat-card">
@@ -312,15 +341,29 @@
 
   <!-- 後台標籤 -->
   <div class="admin-tabs">
-    <div class="admin-tab active">用戶管理</div>
+    <div class="admin-tab active" id="tenantTab">用戶管理</div>
     <div class="admin-tab">相簿管理</div>
     <div class="admin-tab">繳費記錄管理</div>
   </div>
 
   <!-- 表格容器 -->
   <div class="table-container">
-    <input type="text" class="search-input" placeholder="搜尋用戶姓名、電話或房間號...">
-    <div class="empty-text">暫無用戶資料</div>
+    <input type="text" class="search-input" placeholder="搜尋用戶姓名、電話或房間號..." id="tenantSearch">
+    <div class="empty-text" id="emptyTenantText">暫無用戶資料</div>
+    <!-- 新增租客列表表格（預設隱藏，有數據時顯示） -->
+    <table class="tenant-table" id="tenantTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>姓名</th>
+          <th>電話</th>
+          <th>信箱</th>
+          <th>房號</th>
+          <th>MEGA文件夾</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tenantTableBody"></tbody>
+    </table>
   </div>
 
   <script>
@@ -409,6 +452,9 @@
         console.error('讀取繳租資訊失敗:', e);
         alert('讀取已保存的繳租資訊失敗，請重新輸入！');
       }
+
+      // 加載租客列表（新增邏輯，不影響原有代碼）
+      loadTenantList();
     });
 
     // 儲存/更新繳租資訊 - 增強版
@@ -468,6 +514,96 @@
         document.getElementById(`${input.id}Error`).style.display = 'none';
       });
     });
+
+    // ========== 新增租客列表加載邏輯（不影響原有代碼） ==========
+    function loadTenantList() {
+      const tenants = JSON.parse(localStorage.getItem('gdcTenants') || '[]');
+      const emptyText = document.getElementById('emptyTenantText');
+      const tenantTable = document.getElementById('tenantTable');
+      const tenantTableBody = document.getElementById('tenantTableBody');
+      const totalTenants = document.getElementById('totalTenants');
+
+      // 更新統計數字
+      totalTenants.textContent = tenants.length;
+
+      // 判斷是否有租客數據
+      if (tenants.length === 0) {
+        emptyText.style.display = 'block';
+        tenantTable.style.display = 'none';
+        return;
+      }
+
+      // 顯示租客列表
+      emptyText.style.display = 'none';
+      tenantTable.style.display = 'table';
+      tenantTableBody.innerHTML = '';
+
+      // 渲染租客列表
+      tenants.forEach(tenant => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${tenant.name}</td>
+          <td>${tenant.phone}</td>
+          <td>${tenant.email}</td>
+          <td>${tenant.room}</td>
+          <td><a href="https://mega.nz/fm/Dt4TAKJB#${tenant.room}" target="_blank" class="mega-link">查看${tenant.room}文件夾</a></td>
+          <td><button class="btn-view-images" onclick="viewTenantImages('${tenant.room}')">查看圖片</button></td>
+        `;
+        tenantTableBody.appendChild(tr);
+      });
+
+      // 搜索功能
+      document.getElementById('tenantSearch').addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        const rows = tenantTableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(keyword) ? '' : 'none';
+        });
+      });
+    }
+
+    // 查看租客上傳的圖片
+    async function viewTenantImages(room) {
+      try {
+        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
+          method: 'GET'
+        });
+        const result = await res.json();
+
+        if (!result.success) {
+          alert(`房號${room}無圖片或加載失敗：${result.message}`);
+          return;
+        }
+
+        if (result.data.length === 0) {
+          alert(`房號${room}尚未上傳任何圖片`);
+          return;
+        }
+
+        // 彈窗顯示圖片
+        const imagesHtml = result.data.map(img => `<img src="${img.url}" width="150" style="margin: 5px;">`).join('');
+        const modal = document.createElement('div');
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        modal.style.display = 'flex';
+        modal.style.flexDirection = 'column';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.zIndex = '9999';
+        modal.innerHTML = `
+          <button style="background: #dc3545; color: white; border: none; padding: 10px 20px; margin-bottom: 20px; cursor: pointer;" onclick="this.parentElement.remove()">關閉</button>
+          <div style="max-width: 90%; max-height: 80%; overflow: auto;">${imagesHtml}</div>
+        `;
+        document.body.appendChild(modal);
+      } catch (error) {
+        alert('加載圖片失敗：' + error.message);
+      }
+    }
   </script>
 </body>
 </html>

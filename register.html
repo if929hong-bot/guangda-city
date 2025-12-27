@@ -22,7 +22,6 @@
         <label for="reg-phone"><i class="fa-solid fa-phone"></i> 電話號碼 *</label>
         <input type="tel" id="reg-phone" class="form-input" placeholder="請輸入10位電話號碼">
       </div>
-      <!-- 新增信箱欄位 -->
       <div class="form-group">
         <label for="email"><i class="fa-solid fa-envelope"></i> 電子信箱 *</label>
         <input type="email" id="email" class="form-input" placeholder="請輸入您的電子信箱">
@@ -39,11 +38,93 @@
         <label for="confirm-password"><i class="fa-solid fa-lock"></i> 確認密碼 *</label>
         <input type="password" id="confirm-password" class="form-input" placeholder="請再次輸入密碼">
       </div>
-      <button class="btn">註冊</button>
+      <button class="btn" id="registerBtn">註冊</button>
       <div class="link-text">
-        已有帳戶？ <a href="login.html">立即登入</a>
+        已有帳戶？ <a href="index.html">立即登入</a>
       </div>
     </div>
   </div>
+
+  <script>
+    const registerBtn = document.getElementById('registerBtn');
+    
+    function validateForm() {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const room = document.getElementById('room').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const confirmPwd = document.getElementById('confirm-password').value.trim();
+
+      if (!name || !phone || !email || !room || !password || !confirmPwd) {
+        alert('所有欄位均為必填！');
+        return false;
+      }
+      if (!/^\d{10}$/.test(phone)) {
+        alert('電話號碼必須為10位數字！');
+        return false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('請輸入有效的電子信箱！');
+        return false;
+      }
+      if (password.length < 6) {
+        alert('密碼至少需要6位！');
+        return false;
+      }
+      if (password !== confirmPwd) {
+        alert('兩次輸入的密碼不一致！');
+        return false;
+      }
+
+      return { name, phone, email, room, password };
+    }
+
+    registerBtn.addEventListener('click', async () => {
+      const formData = validateForm();
+      if (!formData) return;
+
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
+
+      try {
+        // 1. 調用後端創建MEGA房號文件夾（你的Vercel域名）
+        const folderRes = await fetch('https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/create-room-folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomNumber: formData.room })
+        });
+        const folderResult = await folderRes.json();
+
+        if (!folderResult.success) {
+          alert('文件夾創建失敗：' + folderResult.message);
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '註冊';
+          return;
+        }
+
+        // 2. 存儲租客信息到LocalStorage（供Admin/登入頁讀取）
+        const tenants = JSON.parse(localStorage.getItem('gdcTenants') || '[]');
+        // 檢查重複房號/電話
+        if (tenants.some(t => t.phone === formData.phone || t.room === formData.room)) {
+          alert('該電話/房號已註冊！');
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '註冊';
+          return;
+        }
+        tenants.push(formData);
+        localStorage.setItem('gdcTenants', JSON.stringify(tenants));
+
+        alert('註冊成功！已為您創建房號文件夾');
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('註冊失敗：', error);
+        alert('網路錯誤，請稍後再試！');
+      } finally {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '註冊';
+      }
+    });
+  </script>
 </body>
 </html>

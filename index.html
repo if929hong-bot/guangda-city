@@ -80,7 +80,7 @@
       });
     });
 
-    // 登入按鈕點擊事件（原始程式完全不變）
+    // 登入按鈕點擊事件（補充租客真實信息驗證）
     loginBtn.addEventListener('click', () => {
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -105,11 +105,21 @@
           alert('管理員帳號或密碼錯誤！');
         }
       } else {
-        // 租客登入（簡單驗證，非空即可）
-        alert('租客登入成功！');
-        window.location.href = 'tenant.html'; // 跳轉租客個人頁面
+        // 租客登入（驗證LocalStorage中的真實信息）
+        const tenants = JSON.parse(localStorage.getItem('gdcTenants') || '[]');
+        const tenant = tenants.find(t => t.phone === phone && t.password === password);
+        
+        if (tenant) {
+          // 存儲當前登錄租客信息（供tenant.html使用）
+          sessionStorage.setItem('currentTenant', JSON.stringify(tenant));
+          localStorage.setItem('currentTenant', JSON.stringify(tenant));
+          alert('租客登入成功！');
+          window.location.href = 'tenant.html'; // 跳轉租客個人頁面
+        } else {
+          alert('租客電話或密碼錯誤！');
+        }
       }
-    });
-  </script>
+    }); // 補充：閉合 addEventListener 的回調函數
+  </script> <!-- 確保 script 標籤正常閉合 -->
 </body>
 </html>

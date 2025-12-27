@@ -300,15 +300,32 @@
       text-align: center;
       grid-column: 1 / -1;
     }
+    /* 新增圖片展示樣式 */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .image-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .image-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
   <!-- 個人頁面標頭 -->
   <div class="profile-header">
     <div class="profile-greeting">
-      <div class="profile-avatar">測</div>
+      <div class="profile-avatar" id="profileAvatar">測</div>
       <div>
-        <div class="profile-name">歡迎回來，測試</div>
+        <div class="profile-name" id="profileName">歡迎回來，測試</div>
         <div class="profile-subtitle">廣大城租客管理系統</div>
       </div>
     </div>
@@ -319,17 +336,17 @@
   <div class="profile-cards">
     <div class="profile-card">
       <div class="label">姓名</div>
-      <div class="value">測試</div>
+      <div class="value" id="cardName">測試</div>
       <div class="desc">租客資訊</div>
     </div>
     <div class="profile-card">
       <div class="label">房間</div>
-      <div class="value" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">A401</div>
+      <div class="value" id="cardRoom" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">A401</div>
       <div class="desc">房間號碼</div>
     </div>
     <div class="profile-card">
       <div class="label">相簿圖片</div>
-      <div class="value">0</div>
+      <div class="value" id="cardImageCount">0</div>
       <div class="desc">已上傳圖片數量</div>
     </div>
   </div>
@@ -364,10 +381,12 @@
         <i class="fa-solid fa-plus"></i> 上傳圖片
       </button>
     </div>
-    <div class="empty-state">
+    <div class="empty-state" id="imagesEmptyState">
       您還沒有上傳任何圖片
       <button class="empty-btn blue" id="openUploadModal2">開始上傳</button>
     </div>
+    <!-- 新增圖片展示區 -->
+    <div class="images-grid" id="imagesGrid" style="display: none;"></div>
   </div>
 
   <!-- 新增繳費記錄彈窗 -->
@@ -475,8 +494,9 @@
           <div class="modal-form-group">
             <label>選擇圖片</label>
             <div class="file-input-container">
-              <button type="button" class="file-input-btn">選擇檔案</button>
-              <span>未選擇任何檔案</span>
+              <button type="button" class="file-input-btn" id="selectFileBtn">選擇檔案</button>
+              <span id="fileSelectedText">未選擇任何檔案</span>
+              <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
             </div>
             <div class="modal-form-note">支援JPG、PNG格式，最大5MB</div>
           </div>
@@ -484,7 +504,7 @@
       </div>
       <div class="modal-footer">
         <button class="modal-btn-cancel" id="cancelUploadModal">取消</button>
-        <button class="modal-btn-confirm">上傳</button>
+        <button class="modal-btn-confirm" id="confirmUploadBtn">上傳</button>
       </div>
     </div>
   </div>
@@ -571,7 +591,7 @@
     // 租客頁面登出功能
     document.querySelector('.logout-btn').addEventListener('click', () => {
       if (confirm('確定要登出嗎？')) {
-        window.location.href = 'login.html'; // 返回登入頁面
+        window.location.href = 'index.html'; // 返回登入頁面（修正為index.html）
       }
     });
 
@@ -608,8 +628,141 @@
       });
     }
 
-    // 頁面加載時加載銀行資訊
-    window.addEventListener('load', loadBankInfo);
+    // ========== 新增租客個人信息加載 + 圖片上傳邏輯 ==========
+    // 加載當前租客信息
+    function loadTenantProfile() {
+      // 從LocalStorage獲取當前登錄租客（登入頁需存儲）
+      const currentTenant = JSON.parse(sessionStorage.getItem('currentTenant') || localStorage.getItem('currentTenant') || '{}');
+      if (!currentTenant.name || !currentTenant.room) {
+        // 若未登錄，跳轉到登入頁
+        alert('請先登入！');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 更新頁面顯示的個人信息
+      document.getElementById('profileName').textContent = `歡迎回來，${currentTenant.name}`;
+      document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0);
+      document.getElementById('cardName').textContent = currentTenant.name;
+      document.getElementById('cardRoom').textContent = currentTenant.room;
+
+      // 加載租客已上傳的圖片
+      loadTenantImages(currentTenant.room);
+    }
+
+    // 加載租客已上傳的圖片
+    async function loadTenantImages(room) {
+      try {
+        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
+          method: 'GET'
+        });
+        const result = await res.json();
+
+        const emptyState = document.getElementById('imagesEmptyState');
+        const imagesGrid = document.getElementById('imagesGrid');
+        const cardImageCount = document.getElementById('cardImageCount');
+
+        if (!result.success || result.data.length === 0) {
+          emptyState.style.display = 'block';
+          imagesGrid.style.display = 'none';
+          cardImageCount.textContent = '0';
+          return;
+        }
+
+        // 顯示圖片列表
+        emptyState.style.display = 'none';
+        imagesGrid.style.display = 'grid';
+        cardImageCount.textContent = result.data.length;
+        imagesGrid.innerHTML = '';
+
+        // 渲染圖片
+        result.data.forEach(img => {
+          const imageItem = document.createElement('div');
+          imageItem.className = 'image-item';
+          imageItem.innerHTML = `<img src="${img.url}" alt="${img.name}">`;
+          imagesGrid.appendChild(imageItem);
+        });
+      } catch (error) {
+        console.error('加載圖片失敗：', error);
+      }
+    }
+
+    // 圖片上傳按鈕綁定
+    document.getElementById('selectFileBtn').addEventListener('click', () => {
+      document.getElementById('fileInput').click();
+    });
+
+    // 選擇文件後更新顯示文本
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const files = e.target.files;
+      const text = files.length === 0 ? '未選擇任何檔案' : 
+                   files.length === 1 ? `已選擇：${files[0].name}` : 
+                   `已選擇${files.length}個檔案`;
+      document.getElementById('fileSelectedText').textContent = text;
+    });
+
+    // 確認上傳圖片
+    document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
+      const files = document.getElementById('fileInput').files;
+      const currentTenant = JSON.parse(sessionStorage.getItem('currentTenant') || localStorage.getItem('currentTenant') || '{}');
+      const room = currentTenant.room;
+
+      if (files.length === 0) {
+        alert('請選擇要上傳的圖片！');
+        return;
+      }
+      if (!room) {
+        alert('無法獲取房號，請重新登入！');
+        return;
+      }
+
+      // 禁用按鈕
+      const confirmBtn = document.getElementById('confirmUploadBtn');
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '上傳中...';
+
+      try {
+        // 構建FormData
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+          formData.append('images', files[i]);
+        }
+        formData.append('room', room);
+
+        // 調用後端上傳接口
+        const res = await fetch('https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/upload-image', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          alert(`成功上傳${result.data.length}張圖片！`);
+          // 關閉彈窗
+          uploadModal.style.display = 'none';
+          // 重置文件選擇
+          document.getElementById('fileInput').value = '';
+          document.getElementById('fileSelectedText').textContent = '未選擇任何檔案';
+          // 重新加載圖片
+          loadTenantImages(room);
+        } else {
+          alert('上傳失敗：' + result.message);
+        }
+      } catch (error) {
+        console.error('上傳失敗：', error);
+        alert('網路錯誤，請稍後再試！');
+      } finally {
+        // 恢復按鈕
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '上傳';
+      }
+    });
+
+    // 頁面加載時執行
+    window.addEventListener('load', () => {
+      loadBankInfo();
+      loadTenantProfile(); // 加載租客信息
+    });
     // 監聽本地存儲變化，即時更新銀行資訊
     window.addEventListener('storage', loadBankInfo);
   </script>
