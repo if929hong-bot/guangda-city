@@ -221,7 +221,7 @@
     /* 表格容器樣式 */
     .table-container {
       max-width: 1200px;
-      margin: 0 auto;
+      margin: 0 auto 30px;
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -268,9 +268,54 @@
       cursor: pointer;
       font-size: 12px;
     }
-    .tenant-table .mega-link {
+    .mega-link {
       color: #007bff;
       text-decoration: none;
+    }
+
+    /* 繳費記錄表格樣式 */
+    .payment-record-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .payment-record-table th, .payment-record-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    .payment-record-table th {
+      background-color: #f8f9fa;
+      color: #1f4e8c;
+    }
+    .payment-record-table tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    /* 圖片展示樣式 */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .image-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .image-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+
+    /* 標籤內容容器 */
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
     }
   </style>
 </head>
@@ -329,25 +374,25 @@
     </div>
     <div class="stat-card">
       <h3>總繳費記錄</h3>
-      <div class="value">0</div>
+      <div class="value" id="totalPayments">0</div>
       <div class="desc">總繳費數</div>
     </div>
     <div class="stat-card">
       <h3>總金額</h3>
-      <div class="value">$0</div>
+      <div class="value" id="totalAmountSum">$0</div>
       <div class="desc">累計收入</div>
     </div>
   </div>
 
   <!-- 後台標籤 -->
   <div class="admin-tabs">
-    <div class="admin-tab active" id="tenantTab">用戶管理</div>
-    <div class="admin-tab">相簿管理</div>
-    <div class="admin-tab">繳費記錄管理</div>
+    <div class="admin-tab active" data-tab="tenant">用戶管理</div>
+    <div class="admin-tab" data-tab="album">相簿管理</div>
+    <div class="admin-tab" data-tab="payment">繳費記錄管理</div>
   </div>
 
-  <!-- 表格容器 -->
-  <div class="table-container">
+  <!-- 用戶管理標籤內容 -->
+  <div class="table-container tab-content active" id="tenantTabContent">
     <input type="text" class="search-input" placeholder="搜尋用戶姓名、電話或房間號..." id="tenantSearch">
     <div class="empty-text" id="emptyTenantText">暫無用戶資料</div>
     <!-- 新增租客列表表格（預設隱藏，有數據時顯示） -->
@@ -366,13 +411,56 @@
     </table>
   </div>
 
+  <!-- 相簿管理標籤內容 -->
+  <div class="table-container tab-content" id="albumTabContent">
+    <input type="text" class="search-input" placeholder="搜尋房間號..." id="albumSearch">
+    <div class="empty-text" id="emptyAlbumText">暫無圖片資料</div>
+    <div id="albumContent" style="display: none;"></div>
+  </div>
+
+  <!-- 繳費記錄管理標籤內容 -->
+  <div class="table-container tab-content" id="paymentTabContent">
+    <input type="text" class="search-input" placeholder="搜尋租客姓名、房號或繳費區間..." id="paymentSearch">
+    <div class="empty-text" id="emptyPaymentText">暫無繳費記錄</div>
+    <table class="payment-record-table" id="paymentRecordTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>租客姓名</th>
+          <th>房號</th>
+          <th>租約期間</th>
+          <th>繳費區間</th>
+          <th>房租</th>
+          <th>電費</th>
+          <th>水費</th>
+          <th>總金額</th>
+          <th>匯款日期</th>
+          <th>匯款後五碼</th>
+          <th>新增時間</th>
+        </tr>
+      </thead>
+      <tbody id="paymentRecordTableBody"></tbody>
+    </table>
+  </div>
+
   <script>
     // 後台標籤切換
     const adminTabs = document.querySelectorAll('.admin-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
     adminTabs.forEach(tab => {
       tab.addEventListener('click', () => {
+        // 移除所有active
         adminTabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        // 當前標籤激活
         tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(`${tabId}TabContent`).classList.add('active');
+        
+        // 加載對應數據
+        if (tabId === 'album') loadAlbumData();
+        if (tabId === 'payment') loadPaymentRecords();
       });
     });
 
@@ -453,13 +541,36 @@
         alert('讀取已保存的繳租資訊失敗，請重新輸入！');
       }
 
-      // 加載租客列表（核心修復：優化數據讀取和渲染）
+      // 加載租客列表
       loadTenantList();
+      
+      // 加載統計數據
+      loadStatsData();
 
-      // 綁定搜索事件（移到這裡，避免重複綁定）
+      // 綁定搜索事件
       document.getElementById('tenantSearch').addEventListener('input', (e) => {
         const keyword = e.target.value.toLowerCase().trim();
         const rows = document.querySelectorAll('#tenantTableBody tr');
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(keyword) ? '' : 'none';
+        });
+      });
+
+      // 相簿搜索事件
+      document.getElementById('albumSearch').addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        const albumItems = document.querySelectorAll('#albumContent > div');
+        albumItems.forEach(item => {
+          const room = item.getAttribute('data-room');
+          item.style.display = room.toLowerCase().includes(keyword) ? '' : 'none';
+        });
+      });
+
+      // 繳費記錄搜索事件
+      document.getElementById('paymentSearch').addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#paymentRecordTableBody tr');
         rows.forEach(row => {
           const text = row.textContent.toLowerCase();
           row.style.display = text.includes(keyword) ? '' : 'none';
@@ -525,7 +636,7 @@
       });
     });
 
-    // ========== 核心修復：租客列表加載邏輯 ==========
+    // ========== 核心功能：租客列表加載 ==========
     function loadTenantList() {
       // 兼容 LocalStorage 讀取錯誤
       let tenants = [];
@@ -582,26 +693,175 @@
       });
     }
 
+    // ========== 新增功能：加載統計數據 ==========
+    function loadStatsData() {
+      // 計算總租客數
+      let tenants = [];
+      try {
+        const storedTenants = localStorage.getItem('gdcTenants');
+        if (storedTenants) {
+          tenants = JSON.parse(storedTenants);
+          if (!Array.isArray(tenants)) tenants = [];
+        }
+      } catch (e) {
+        tenants = [];
+      }
+      document.getElementById('totalTenants').textContent = tenants.length;
+
+      // 計算總圖片數
+      let totalImages = 0;
+      try {
+        const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+        for (const room in roomImages) {
+          totalImages += roomImages[room].length;
+        }
+      } catch (e) {
+        totalImages = 0;
+      }
+      document.getElementById('totalImages').textContent = totalImages;
+
+      // 計算總繳費記錄和總金額
+      let totalPayments = 0;
+      let totalAmountSum = 0;
+      try {
+        const paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+        totalPayments = paymentRecords.length;
+        paymentRecords.forEach(record => {
+          totalAmountSum += parseFloat(record.totalAmount) || 0;
+        });
+      } catch (e) {
+        totalPayments = 0;
+        totalAmountSum = 0;
+      }
+      document.getElementById('totalPayments').textContent = totalPayments;
+      document.getElementById('totalAmountSum').textContent = `$${totalAmountSum.toFixed(0)}`;
+    }
+
+    // ========== 新增功能：加載相簿數據 ==========
+    function loadAlbumData() {
+      let roomImages = {};
+      try {
+        roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+      } catch (e) {
+        roomImages = {};
+      }
+
+      const emptyAlbumText = document.getElementById('emptyAlbumText');
+      const albumContent = document.getElementById('albumContent');
+
+      // 判斷是否有圖片數據
+      const hasImages = Object.keys(roomImages).some(room => roomImages[room].length > 0);
+      if (!hasImages) {
+        emptyAlbumText.style.display = 'block';
+        albumContent.style.display = 'none';
+        return;
+      }
+
+      emptyAlbumText.style.display = 'none';
+      albumContent.style.display = 'block';
+      albumContent.innerHTML = '';
+
+      // 渲染每個房間的圖片
+      for (const room in roomImages) {
+        const images = roomImages[room];
+        if (images.length === 0) continue;
+
+        const roomDiv = document.createElement('div');
+        roomDiv.setAttribute('data-room', room);
+        roomDiv.style.marginBottom = '30px';
+        roomDiv.innerHTML = `
+          <h3 style="color: #1f4e8c; margin-bottom: 15px;">房間 ${room} (${images.length} 張圖片)</h3>
+          <div class="images-grid">
+            ${images.map(img => `
+              <div class="image-item">
+                <img src="${img.url}" alt="${img.name || `房號${room}圖片`}">
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top: 10px;">
+            <a href="https://mega.nz/fm/Dt4TAKJB#${room}" target="_blank" class="mega-link">
+              <i class="fa-solid fa-external-link"></i> 前往MEGA查看${room}文件夾
+            </a>
+          </div>
+        `;
+        albumContent.appendChild(roomDiv);
+      }
+    }
+
+    // ========== 新增功能：加載繳費記錄 ==========
+    function loadPaymentRecords() {
+      let paymentRecords = [];
+      try {
+        paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+      } catch (e) {
+        paymentRecords = [];
+      }
+
+      const emptyPaymentText = document.getElementById('emptyPaymentText');
+      const paymentRecordTable = document.getElementById('paymentRecordTable');
+      const paymentRecordTableBody = document.getElementById('paymentRecordTableBody');
+
+      // 判斷是否有繳費記錄
+      if (paymentRecords.length === 0) {
+        emptyPaymentText.style.display = 'block';
+        paymentRecordTable.style.display = 'none';
+        return;
+      }
+
+      emptyPaymentText.style.display = 'none';
+      paymentRecordTable.style.display = 'table';
+      paymentRecordTableBody.innerHTML = '';
+
+      // 渲染繳費記錄
+      paymentRecords.forEach(record => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${record.tenantName || '未知'}</td>
+          <td>${record.room || '未知'}</td>
+          <td>${record.rentalPeriod || '未填寫'}</td>
+          <td>${record.paymentPeriod || '未填寫'}</td>
+          <td>${record.rent || 0}元</td>
+          <td>${record.electricityTotal || 0}元</td>
+          <td>${record.waterTotal || 0}元</td>
+          <td>${record.totalAmount || 0}元</td>
+          <td>${record.paymentDate || '未填寫'}</td>
+          <td>${record.paymentLast5 || '未填寫'}</td>
+          <td>${record.submitTime || '未知'}</td>
+        `;
+        paymentRecordTableBody.appendChild(tr);
+      });
+    }
+
     // 查看租客上傳的圖片
     window.viewTenantImages = async function(room) {
       try {
-        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
-          method: 'GET'
-        });
-        const result = await res.json();
-
-        if (!result.success) {
-          alert(`房號${room}無圖片或加載失敗：${result.message}`);
-          return;
+        // 先從本地存儲讀取
+        let roomImages = {};
+        try {
+          roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+        } catch (e) {
+          roomImages = {};
         }
 
-        if (result.data.length === 0) {
-          alert(`房號${room}尚未上傳任何圖片`);
-          return;
+        const images = roomImages[room] || [];
+        if (images.length === 0) {
+          // 備選：從API加載
+          const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
+            method: 'GET'
+          });
+          const result = await res.json();
+          
+          if (!result.success || result.data.length === 0) {
+            alert(`房號${room}無圖片或加載失敗`);
+            return;
+          }
+          
+          // 使用API返回的圖片
+          images = result.data;
         }
 
         // 彈窗顯示圖片
-        const imagesHtml = result.data.map(img => `<img src="${img.url}" width="150" style="margin: 5px;">`).join('');
+        const imagesHtml = images.map(img => `<img src="${img.url || img}" width="150" style="margin: 5px;">`).join('');
         const modal = document.createElement('div');
         modal.style.position = 'fixed';
         modal.style.top = '0';

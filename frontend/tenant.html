@@ -4,10 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>廣大城租客管理 - 租客個人頁面</title>
-  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* 個人頁面擴展樣式 */
+    /* 全局重置 + 基礎樣式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Microsoft JhengHei", sans-serif;
+    }
+    body {
+      background-color: #f5f7fa;
+      padding: 20px;
+    }
+    /* 標頭樣式 */
     .profile-header {
       display: flex;
       align-items: center;
@@ -41,6 +51,19 @@
       color: #666;
       margin-top: 2px;
     }
+    .logout-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+    /* 個人資訊卡片 */
     .profile-cards {
       display: flex;
       gap: 20px;
@@ -71,6 +94,7 @@
       color: #999;
       margin-top: 5px;
     }
+    /* 區塊通用樣式 */
     .section {
       max-width: 1200px;
       margin: 0 auto 30px;
@@ -98,9 +122,6 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
     .btn-green:hover {
       background-color: #218838;
@@ -113,9 +134,6 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
     .btn-blue:hover {
       background-color: #0069d9;
@@ -139,7 +157,55 @@
     .empty-btn.blue {
       background-color: #007bff;
     }
-    /* 彈窗樣式 - 直接改用固定定位+手動控制坐標 */
+    /* 銀行資訊樣式 */
+    .bank-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px 20px;
+    }
+    .bank-info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .bank-info-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .bank-info-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+      padding: 8px 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+    .bank-info-empty {
+      color: #999;
+      font-size: 14px;
+      padding: 20px 0;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+    /* 圖片展示樣式 */
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .image-item {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .image-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    /* 彈窗樣式（核心） */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -148,19 +214,20 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 1000;
-      display: none; /* 預設隱藏 */
+      display: none;
     }
     .modal {
       background: white;
-      width: 100%;
+      width: 90%;
       max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
       border-radius: 8px;
       box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      position: fixed; /* 直接用fixed定位 */
-      top: 20%; /* 初始位置 */
+      position: fixed;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
       z-index: 1001;
     }
     .modal-header {
@@ -170,7 +237,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: move; /* 強制手型 */
+      cursor: move;
     }
     .modal-title {
       font-size: 16px;
@@ -190,9 +257,6 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px 20px;
-    }
-    .modal-form.full-width {
-      grid-template-columns: 1fr;
     }
     .modal-form-group {
       margin-bottom: 10px;
@@ -258,88 +322,10 @@
       cursor: pointer;
       font-size: 14px;
     }
-    /* 繳租銀行資訊樣式 */
-    .payment-bank-info {
-      max-width: 1200px;
-      margin: 0 auto 30px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-    }
-    .bank-info-title {
-      font-size: 18px;
-      color: #1f4e8c;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .bank-info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px 20px;
-    }
-    .bank-info-item {
-      display: flex;
-      flex-direction: column;
-    }
-    .bank-info-label {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 5px;
-    }
-    .bank-info-value {
-      font-size: 16px;
-      color: #333;
-      font-weight: 500;
-      padding: 8px 10px;
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #eee;
-    }
-    .bank-info-empty {
-      color: #999;
-      font-size: 14px;
-      padding: 20px 0;
-      text-align: center;
-      grid-column: 1 / -1;
-    }
-    /* 新增圖片展示樣式 */
-    .images-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .image-item {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .image-item img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-    }
-    /* 登出按鈕樣式補充 */
-    .logout-btn {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .logout-btn:hover {
-      background-color: #c82333;
-    }
   </style>
 </head>
 <body>
-  <!-- 個人頁面標頭 -->
+  <!-- 標頭 -->
   <div class="profile-header">
     <div class="profile-greeting">
       <div class="profile-avatar" id="profileAvatar">測</div>
@@ -348,9 +334,7 @@
         <div class="profile-subtitle">廣大城租客管理系統</div>
       </div>
     </div>
-    <button class="logout-btn" id="logoutBtn">
-      <<i class="fa-solid fa-right-from-bracket"></</i> 登出
-    </button>
+    <button class="logout-btn" id="logoutBtn">登出</button>
   </div>
 
   <!-- 個人資訊卡片 -->
@@ -362,7 +346,7 @@
     </div>
     <div class="profile-card">
       <div class="label">房間</div>
-      <div class="value" id="cardRoom" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">A401</div>
+      <div class="value" id="cardRoom" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">101</div>
       <div class="desc">房間號碼</div>
     </div>
     <div class="profile-card">
@@ -372,53 +356,51 @@
     </div>
   </div>
 
-  <!-- 繳租銀行資訊區塊 -->
-  <div class="payment-bank-info">
-    <div class="bank-info-title">繳租銀行資訊</div>
+  <!-- 繳租銀行資訊 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">繳租銀行資訊</div>
+    </div>
     <div class="bank-info-grid" id="bankInfoGrid">
-      <!-- 動態加載銀行資訊 -->
+      <!-- 動態加載 -->
     </div>
   </div>
 
-  <!-- 租約繳費紀錄區塊 -->
+  <!-- 繳費記錄 -->
   <div class="section">
     <div class="section-header">
       <div class="section-title">租約繳費記錄</div>
-      <button class="btn-green" id="openPaymentModal">
-        <<i class="fa-solid fa-plus"></</i> 新增繳費記錄
-      </button>
+      <button class="btn-green" id="openPaymentModal">新增繳費記錄</button>
     </div>
-    <div class="empty-state">
+    <div class="empty-state" id="paymentEmptyState">
       尚無繳費記錄
       <button class="empty-btn" id="openPaymentModal2">新增第一筆記錄</button>
     </div>
+    <div id="paymentList" style="display: none;"></div>
   </div>
 
-  <!-- 我的相簿區塊 -->
+  <!-- 我的相簿 -->
   <div class="section">
     <div class="section-header">
       <div class="section-title">我的相簿</div>
-      <button class="btn-blue" id="openUploadModal">
-        <<i class="fa-solid fa-plus"></</i> 上傳圖片
-      </button>
+      <button class="btn-blue" id="openUploadModal">上傳圖片</button>
     </div>
     <div class="empty-state" id="imagesEmptyState">
       您還沒有上傳任何圖片
       <button class="empty-btn blue" id="openUploadModal2">開始上傳</button>
     </div>
-    <!-- 新增圖片展示區 -->
     <div class="images-grid" id="imagesGrid" style="display: none;"></div>
   </div>
 
-  <!-- 新增繳費記錄彈窗 -->
+  <!-- 新增繳費彈窗 -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal" id="paymentModalContent">
       <div class="modal-header" id="paymentModalHeader">
         <div class="modal-title">新增繳費記錄</div>
-        <button class="modal-close" id="closePaymentModal"><<i class="fa-solid fa-xmark"></</i></button>
+        <button class="modal-close" id="closePaymentModal">×</button>
       </div>
       <div class="modal-body">
-        <form class="modal-form">
+        <form class="modal-form" id="paymentForm">
           <div class="modal-form-group">
             <label for="rentalPeriod">租約期間 *</label>
             <input type="text" id="rentalPeriod" class="modal-form-input" placeholder="例：2024/01 - 2024/12">
@@ -463,19 +445,16 @@
             <label>水費計算</label>
           </div>
           <div class="modal-form-group">
-            <label for="waterPeople">水費幾人</label>
+            <label for="waterPeople">水費分攤人數</label>
             <input type="number" id="waterPeople" class="modal-form-input" placeholder="請輸入人數" oninput="calculateTotal()">
-            <div class="modal-form-note">請輸入分攤人數</div>
           </div>
           <div class="modal-form-group">
-            <label for="waterShare">備註幾人多少錢</label>
+            <label for="waterShare">水費備註</label>
             <input type="text" id="waterShare" class="modal-form-input" placeholder="例：3人共450元">
-            <div class="modal-form-note">說明分攤方式</div>
           </div>
           <div class="modal-form-group">
             <label for="waterTotal">總水費（元）</label>
             <input type="number" id="waterTotal" class="modal-form-input" placeholder="請輸入總水費" oninput="calculateTotal()">
-            <div class="modal-form-note">請輸入應付水費金額</div>
           </div>
           <div class="modal-form-group">
             <label for="rentMonth">第幾個月房租</label>
@@ -492,13 +471,12 @@
           <div class="modal-form-group" style="grid-column: 1 / -1;">
             <label for="paymentNote">備註（非必填）</label>
             <textarea id="paymentNote" class="modal-form-input" rows="3" placeholder="請輸入備註內容"></textarea>
-            <div class="modal-form-note">可填寫其他相關備註</div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button class="modal-btn-cancel" id="cancelPaymentModal">取消</button>
-        <button class="modal-btn-confirm">新增</button>
+        <button class="modal-btn-confirm" id="submitPayment">新增</button>
       </div>
     </div>
   </div>
@@ -508,7 +486,7 @@
     <div class="modal upload-modal" id="uploadModalContent">
       <div class="modal-header" id="uploadModalHeader">
         <div class="modal-title">上傳圖片</div>
-        <button class="modal-close" id="closeUploadModal"><<i class="fa-solid fa-xmark"></</i></button>
+        <button class="modal-close" id="closeUploadModal">×</button>
       </div>
       <div class="modal-body">
         <form class="modal-form">
@@ -531,258 +509,233 @@
   </div>
 
   <script>
-    // 電費自動計算函數
+    // 1. 電費/總金額計算
     function calculateElectricity() {
-      const lastElectricity = parseFloat(document.getElementById('lastElectricity').value) || 0;
-      const currentElectricity = parseFloat(document.getElementById('currentElectricity').value) || 0;
-      const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0;
-      const electricityUsage = Math.max(0, currentElectricity - lastElectricity);
-      const electricityTotal = electricityUsage * electricityPrice;
-      document.getElementById('electricityUsage').value = electricityUsage.toFixed(1);
-      document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
+      const last = parseFloat(document.getElementById('lastElectricity').value) || 0;
+      const current = parseFloat(document.getElementById('currentElectricity').value) || 0;
+      const price = parseFloat(document.getElementById('electricityPrice').value) || 0;
+      const usage = Math.max(0, current - last);
+      const total = usage * price;
+      document.getElementById('electricityUsage').value = usage.toFixed(1);
+      document.getElementById('electricityTotal').value = total.toFixed(2);
       calculateTotal();
     }
-
-    // 總金額自動計算函數
     function calculateTotal() {
       const rent = parseFloat(document.getElementById('rent').value) || 0;
-      const electricityTotal = parseFloat(document.getElementById('electricityTotal').value) || 0;
+      const elecTotal = parseFloat(document.getElementById('electricityTotal').value) || 0;
       const waterTotal = parseFloat(document.getElementById('waterTotal').value) || 0;
-      const totalAmount = rent + electricityTotal + waterTotal;
-      document.getElementById('totalAmount').value = totalAmount.toFixed(2);
+      document.getElementById('totalAmount').value = (rent + elecTotal + waterTotal).toFixed(2);
     }
 
-    // 彈窗控制
+    // 2. 彈窗控制 + 拖拽功能
     const paymentModal = document.getElementById('paymentModal');
     const uploadModal = document.getElementById('uploadModal');
-    const openPaymentBtns = [document.getElementById('openPaymentModal'), document.getElementById('openPaymentModal2')];
-    const openUploadBtns = [document.getElementById('openUploadModal'), document.getElementById('openUploadModal2')];
-    const closePaymentModal = document.getElementById('closePaymentModal');
-    const cancelPaymentModal = document.getElementById('cancelPaymentModal');
-    const closeUploadModal = document.getElementById('closeUploadModal');
-    const cancelUploadModal = document.getElementById('cancelUploadModal');
-
-    // 打開新增繳費彈窗
-    openPaymentBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        paymentModal.style.display = 'block';
-      });
-    });
-
-    // 關閉新增繳費彈窗
-    [closePaymentModal, cancelPaymentModal].forEach(btn => {
-      btn.addEventListener('click', () => {
-        paymentModal.style.display = 'none';
-      });
-    });
-
-    // 打開上傳圖片彈窗
-    openUploadBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        uploadModal.style.display = 'block';
-      });
-    });
-
-    // 關閉上傳圖片彈窗
-    [closeUploadModal, cancelUploadModal].forEach(btn => {
-      btn.addEventListener('click', () => {
-        uploadModal.style.display = 'none';
-      });
-    });
-
-    // 點擊彈窗外層關閉
+    // 打開/關閉彈窗
+    document.getElementById('openPaymentModal').addEventListener('click', () => paymentModal.style.display = 'block');
+    document.getElementById('openPaymentModal2').addEventListener('click', () => paymentModal.style.display = 'block');
+    document.getElementById('openUploadModal').addEventListener('click', () => uploadModal.style.display = 'block');
+    document.getElementById('openUploadModal2').addEventListener('click', () => uploadModal.style.display = 'block');
+    // 關閉彈窗
+    document.getElementById('closePaymentModal').addEventListener('click', () => paymentModal.style.display = 'none');
+    document.getElementById('cancelPaymentModal').addEventListener('click', () => paymentModal.style.display = 'none');
+    document.getElementById('closeUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
+    document.getElementById('cancelUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
+    // 點擊外層關閉
     window.addEventListener('click', (e) => {
       if (e.target === paymentModal) paymentModal.style.display = 'none';
       if (e.target === uploadModal) uploadModal.style.display = 'none';
     });
-
-    // ========== 簡化版拖拽功能（直接控制fixed定位） ==========
-    function makeModalDraggable(modalHeader, modalContent) {
-      let isDragging = false;
+    // 拖拽功能
+    function initDrag(header, modal) {
+      let isDrag = false;
       let startX, startY, modalX, modalY;
-
-      // 鼠標按下：記錄初始位置
-      modalHeader.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.modal-close')) return; // 跳過關閉按鈕
-        isDragging = true;
-        // 記錄鼠標和彈窗的初始坐標
+      header.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.modal-close')) return;
+        isDrag = true;
         startX = e.clientX;
         startY = e.clientY;
-        modalX = modalContent.offsetLeft;
-        modalY = modalContent.offsetTop;
-        e.preventDefault();
+        modalX = modal.offsetLeft;
+        modalY = modal.offsetTop;
       });
-
-      // 鼠標移動：更新彈窗位置
       document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        // 計算移動距離
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        // 直接修改fixed定位的left/top
-        modalContent.style.left = `${modalX + dx}px`;
-        modalContent.style.top = `${modalY + dy}px`;
-        modalContent.style.transform = 'none'; // 取消居中
+        if (!isDrag) return;
+        modal.style.left = `${modalX + (e.clientX - startX)}px`;
+        modal.style.top = `${modalY + (e.clientY - startY)}px`;
+        modal.style.transform = 'none';
       });
-
-      // 鼠標鬆開：結束拖拽
-      document.addEventListener('mouseup', () => {
-        isDragging = false;
-      });
+      document.addEventListener('mouseup', () => isDrag = false);
     }
+    initDrag(document.getElementById('paymentModalHeader'), document.getElementById('paymentModalContent'));
+    initDrag(document.getElementById('uploadModalHeader'), document.getElementById('uploadModalContent'));
 
-    // 初始化拖拽
-    makeModalDraggable(
-      document.getElementById('paymentModalHeader'),
-      document.getElementById('paymentModalContent')
-    );
-    makeModalDraggable(
-      document.getElementById('uploadModalHeader'),
-      document.getElementById('uploadModalContent')
-    );
-
-    // 租客頁面登出功能
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      if (confirm('確定要登出嗎？')) {
-        localStorage.removeItem('currentTenant');
-        sessionStorage.removeItem('currentTenant');
-        window.location.href = 'index.html';
-      }
-    });
-
-    // 加載銀行資訊
+    // 3. 銀行資訊同步（從admin設定讀取）
     function loadBankInfo() {
-      const bankInfoGrid = document.getElementById('bankInfoGrid');
-      const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
-      bankInfoGrid.innerHTML = '';
-      if (!paymentInfo.bankName || !paymentInfo.branchName || !paymentInfo.accountName || !paymentInfo.accountNumber) {
-        bankInfoGrid.innerHTML = '<div class="bank-info-empty">管理員尚未設定繳租銀行資訊</div>';
+      const bankInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
+      const grid = document.getElementById('bankInfoGrid');
+      if (!bankInfo.bankName || !bankInfo.branchName || !bankInfo.accountName || !bankInfo.accountNumber) {
+        grid.innerHTML = '<div class="bank-info-empty">管理員尚未設定繳租銀行資訊</div>';
         return;
       }
-      const bankInfoItems = [
-        { label: '銀行名稱', value: paymentInfo.bankName },
-        { label: '分行名稱', value: paymentInfo.branchName },
-        { label: '戶名', value: paymentInfo.accountName },
-        { label: '銀行帳號', value: paymentInfo.accountNumber }
-      ];
-      bankInfoItems.forEach(item => {
-        const infoItem = document.createElement('div');
-        infoItem.className = 'bank-info-item';
-        infoItem.innerHTML = `<span class="bank-info-label">${item.label}</span><span class="bank-info-value">${item.value}</span>`;
-        bankInfoGrid.appendChild(infoItem);
-      });
+      grid.innerHTML = `
+        <div class="bank-info-item">
+          <span class="bank-info-label">銀行名稱</span>
+          <span class="bank-info-value">${bankInfo.bankName}</span>
+        </div>
+        <div class="bank-info-item">
+          <span class="bank-info-label">分行名稱</span>
+          <span class="bank-info-value">${bankInfo.branchName}</span>
+        </div>
+        <div class="bank-info-item">
+          <span class="bank-info-label">戶名</span>
+          <span class="bank-info-value">${bankInfo.accountName}</span>
+        </div>
+        <div class="bank-info-item">
+          <span class="bank-info-label">銀行帳號</span>
+          <span class="bank-info-value">${bankInfo.accountNumber}</span>
+        </div>
+      `;
     }
 
-    // 加載租客信息
-    function loadTenantProfile() {
-      let currentTenant = null;
-      try {
-        currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || JSON.parse(sessionStorage.getItem('currentTenant'));
-      } catch (e) {
-        currentTenant = null;
-      }
-      if (!currentTenant || !currentTenant.name || !currentTenant.phone || !currentTenant.room) {
-        alert('您尚未登入，請先登入系統！');
-        window.location.href = 'index.html';
-        return;
-      }
-      document.getElementById('profileName').textContent = `歡迎回來，${currentTenant.name}`;
-      document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0) || '租';
-      document.getElementById('cardName').textContent = currentTenant.name;
-      document.getElementById('cardRoom').textContent = currentTenant.room;
-      loadTenantImages(currentTenant.room);
-    }
-
-    // 加載租客圖片
-    async function loadTenantImages(room) {
-      try {
-        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`);
-        const result = await res.json();
-        const emptyState = document.getElementById('imagesEmptyState');
-        const imagesGrid = document.getElementById('imagesGrid');
-        const cardImageCount = document.getElementById('cardImageCount');
-        if (!result.success || result.data.length === 0) {
-          emptyState.style.display = 'block';
-          imagesGrid.style.display = 'none';
-          cardImageCount.textContent = '0';
-          return;
-        }
-        emptyState.style.display = 'none';
-        imagesGrid.style.display = 'grid';
-        cardImageCount.textContent = result.data.length;
-        imagesGrid.innerHTML = '';
-        result.data.forEach(img => {
-          const imageItem = document.createElement('div');
-          imageItem.className = 'image-item';
-          imageItem.innerHTML = `<img src="${img.url}" alt="${img.name || `房號${room}圖片`}">`;
-          imagesGrid.appendChild(imageItem);
-        });
-      } catch (error) {
-        document.getElementById('cardImageCount').textContent = '0';
-      }
-    }
-
-    // 圖片上傳
-    document.getElementById('selectFileBtn').addEventListener('click', () => {
-      document.getElementById('fileInput').click();
+    // 4. 繳費記錄上傳（同步到管理員後台）
+    document.getElementById('submitPayment').addEventListener('click', () => {
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      const paymentData = {
+        tenantName: currentTenant.name,
+        room: currentTenant.room,
+        rentalPeriod: document.getElementById('rentalPeriod').value,
+        paymentPeriod: document.getElementById('paymentPeriod').value,
+        rent: document.getElementById('rent').value,
+        totalAmount: document.getElementById('totalAmount').value,
+        lastElectricity: document.getElementById('lastElectricity').value,
+        currentElectricity: document.getElementById('currentElectricity').value,
+        electricityUsage: document.getElementById('electricityUsage').value,
+        electricityPrice: document.getElementById('electricityPrice').value,
+        electricityTotal: document.getElementById('electricityTotal').value,
+        waterPeople: document.getElementById('waterPeople').value,
+        waterShare: document.getElementById('waterShare').value,
+        waterTotal: document.getElementById('waterTotal').value,
+        rentMonth: document.getElementById('rentMonth').value,
+        paymentLast5: document.getElementById('paymentLast5').value,
+        paymentDate: document.getElementById('paymentDate').value,
+        paymentNote: document.getElementById('paymentNote').value,
+        submitTime: new Date().toLocaleString()
+      };
+      // 儲存到localStorage（管理員後台讀取）
+      let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+      paymentRecords.push(paymentData);
+      localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
+      // 刷新頁面顯示
+      renderPaymentList();
+      paymentModal.style.display = 'none';
+      alert('繳費記錄新增成功！');
     });
+    // 渲染繳費記錄
+    function renderPaymentList() {
+      const records = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      const myRecords = records.filter(item => item.room === currentTenant.room);
+      const list = document.getElementById('paymentList');
+      const empty = document.getElementById('paymentEmptyState');
+      if (myRecords.length === 0) {
+        empty.style.display = 'block';
+        list.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      list.style.display = 'block';
+      list.innerHTML = myRecords.map(item => `
+        <div style="border: 1px solid #eee; border-radius: 4px; padding: 15px; margin-bottom: 10px;">
+          <div style="font-weight: bold; color: #1f4e8c;">${item.paymentPeriod}</div>
+          <div style="margin-top: 5px;">總金額：${item.totalAmount}元</div>
+          <div style="font-size: 12px; color: #999; margin-top: 5px;">新增時間：${item.submitTime}</div>
+        </div>
+      `).join('');
+    }
+
+    // 5. 圖片上傳（同步到MEGA+管理員後台）
+    document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
     document.getElementById('fileInput').addEventListener('change', (e) => {
       const files = e.target.files;
-      const text = files.length === 0 ? '未選擇任何檔案' : files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
-      document.getElementById('fileSelectedText').textContent = text;
+      document.getElementById('fileSelectedText').textContent = files.length === 0 ? '未選擇任何檔案' : 
+        files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
     });
     document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
       const files = document.getElementById('fileInput').files;
-      const currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || JSON.parse(sessionStorage.getItem('currentTenant'));
-      const room = currentTenant?.room;
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
       if (files.length === 0) {
-        alert('請選擇要上傳的圖片！');
+        alert('請選擇圖片！');
         return;
       }
-      if (!room) {
-        alert('無法獲取房號，請重新登入！');
+      // 模擬上傳到MEGA（實際專案需替換為MEGA API）
+      const imageUrls = [];
+      for (let i = 0; i < files.length; i++) {
+        // 用FileReader模擬上傳後的URL
+        const reader = new FileReader();
+        await new Promise(resolve => {
+          reader.onload = (e) => {
+            imageUrls.push({ url: e.target.result, name: files[i].name });
+            resolve();
+          };
+          reader.readAsDataURL(files[i]);
+        });
+      }
+      // 儲存到localStorage（管理員後台可讀取）
+      let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+      if (!roomImages[currentTenant.room]) roomImages[currentTenant.room] = [];
+      roomImages[currentTenant.room] = [...roomImages[currentTenant.room], ...imageUrls];
+      localStorage.setItem('roomImages', JSON.stringify(roomImages));
+      // 刷新相簿
+      loadRoomImages(currentTenant.room);
+      uploadModal.style.display = 'none';
+      alert(`成功上傳${files.length}張圖片！`);
+    });
+    // 加載房間圖片
+    function loadRoomImages(room) {
+      const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+      const images = roomImages[room] || [];
+      const grid = document.getElementById('imagesGrid');
+      const empty = document.getElementById('imagesEmptyState');
+      document.getElementById('cardImageCount').textContent = images.length;
+      if (images.length === 0) {
+        empty.style.display = 'block';
+        grid.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      grid.style.display = 'grid';
+      grid.innerHTML = images.map(img => `
+        <div class="image-item">
+          <img src="${img.url}" alt="${img.name}">
+        </div>
+      `).join('');
+    }
+
+    // 6. 頁面初始化
+    function init() {
+      // 驗證登入
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      if (!currentTenant) {
+        alert('請先登入！');
         window.location.href = 'index.html';
         return;
       }
-      const confirmBtn = document.getElementById('confirmUploadBtn');
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = '上傳中...';
-      try {
-        const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-          formData.append('images', files[i]);
-        }
-        formData.append('room', room);
-        const res = await fetch('https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/upload-image', {
-          method: 'POST',
-          body: formData
-        });
-        const result = await res.json();
-        if (result.success) {
-          alert(`成功上傳${result.data.length}張圖片！`);
-          uploadModal.style.display = 'none';
-          document.getElementById('fileInput').value = '';
-          document.getElementById('fileSelectedText').textContent = '未選擇任何檔案';
-          loadTenantImages(room);
-        } else {
-          alert('上傳失敗：' + result.message);
-        }
-      } catch (error) {
-        alert('網路錯誤，請稍後再試！');
-      } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = '上傳';
-      }
-    });
-
-    // 頁面加載
-    window.addEventListener('load', () => {
-      loadTenantProfile();
+      // 更新個人資訊
+      document.getElementById('profileName').textContent = `歡迎回來，${currentTenant.name}`;
+      document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0);
+      document.getElementById('cardName').textContent = currentTenant.name;
+      document.getElementById('cardRoom').textContent = currentTenant.room;
+      // 加載數據
       loadBankInfo();
+      renderPaymentList();
+      loadRoomImages(currentTenant.room);
+    }
+    // 登出功能
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('currentTenant');
+      window.location.href = 'index.html';
     });
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'paymentInfo') loadBankInfo();
-    });
+    // 頁面加載完成初始化
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
