@@ -322,6 +322,20 @@
       cursor: pointer;
       font-size: 14px;
     }
+    /* 加載動畫 */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -509,6 +523,9 @@
   </div>
 
   <script>
+    // 後端域名配置
+    const API_DOMAIN = 'https://guangda-city-backend.zeabur.app';
+
     // 1. 電費/總金額計算
     function calculateElectricity() {
       const last = parseFloat(document.getElementById('lastElectricity').value) || 0;
@@ -652,13 +669,53 @@
       `).join('');
     }
 
-    // 5. 圖片上傳（同步到MEGA+管理員後台）
+    // 5. 圖片上傳到MEGA（調用後端接口）
+    async function uploadImageToMega(room, file) {
+      try {
+        const formData = new FormData();
+        formData.append('room', room);
+        formData.append('fileName', file.name);
+        formData.append('image', file);
+
+        // 顯示加載狀態
+        const uploadBtn = document.getElementById('confirmUploadBtn');
+        const originalText = uploadBtn.innerHTML;
+        uploadBtn.innerHTML = '<span class="loading"></span>上傳中...';
+        uploadBtn.disabled = true;
+
+        const response = await fetch(`${API_DOMAIN}/api/upload-to-mega`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        
+        // 恢復按鈕狀態
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+
+        if (result.success) {
+          return result.data;
+        } else {
+          alert('上傳失敗：' + result.msg);
+          return null;
+        }
+      } catch (err) {
+        console.error('MEGA上傳錯誤:', err);
+        alert('上傳失敗，請稍後再試');
+        return null;
+      }
+    }
+
+    // 圖片選擇與上傳事件
     document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
     document.getElementById('fileInput').addEventListener('change', (e) => {
       const files = e.target.files;
       document.getElementById('fileSelectedText').textContent = files.length === 0 ? '未選擇任何檔案' : 
         files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
     });
+
+    // 確認上傳按鈕事件
     document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
       const files = document.getElementById('fileInput').files;
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -666,29 +723,40 @@
         alert('請選擇圖片！');
         return;
       }
-      // 模擬上傳到MEGA（實際專案需替換為MEGA API）
-      const imageUrls = [];
+
+      // 批量上傳圖片到MEGA
+      const uploadResults = [];
       for (let i = 0; i < files.length; i++) {
-        // 用FileReader模擬上傳後的URL
-        const reader = new FileReader();
-        await new Promise(resolve => {
-          reader.onload = (e) => {
-            imageUrls.push({ url: e.target.result, name: files[i].name });
-            resolve();
-          };
-          reader.readAsDataURL(files[i]);
-        });
+        const result = await uploadImageToMega(currentTenant.room, files[i]);
+        if (result) uploadResults.push(result);
       }
-      // 儲存到localStorage（管理員後台可讀取）
-      let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-      if (!roomImages[currentTenant.room]) roomImages[currentTenant.room] = [];
-      roomImages[currentTenant.room] = [...roomImages[currentTenant.room], ...imageUrls];
-      localStorage.setItem('roomImages', JSON.stringify(roomImages));
-      // 刷新相簿
-      loadRoomImages(currentTenant.room);
-      uploadModal.style.display = 'none';
-      alert(`成功上傳${files.length}張圖片！`);
+
+      if (uploadResults.length > 0) {
+        // 同時保存到本地存儲（兼容管理端顯示）
+        const imageUrls = [];
+        for (let i = 0; i < files.length; i++) {
+          const reader = new FileReader();
+          await new Promise(resolve => {
+            reader.onload = (e) => {
+              imageUrls.push({ url: e.target.result, name: files[i].name });
+              resolve();
+            };
+            reader.readAsDataURL(files[i]);
+          });
+        }
+
+        let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+        if (!roomImages[currentTenant.room]) roomImages[currentTenant.room] = [];
+        roomImages[currentTenant.room] = [...roomImages[currentTenant.room], ...imageUrls];
+        localStorage.setItem('roomImages', JSON.stringify(roomImages));
+
+        // 刷新相簿
+        loadRoomImages(currentTenant.room);
+        uploadModal.style.display = 'none';
+        alert(`成功上傳${uploadResults.length}張圖片到MEGA！`);
+      }
     });
+
     // 加載房間圖片
     function loadRoomImages(room) {
       const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
@@ -710,7 +778,42 @@
       `).join('');
     }
 
-    // 6. 頁面初始化
+    // 6. 忘記密碼發送郵件（暴露到全局，供登入頁調用）
+    window.sendResetEmail = async function(email, tenantName) {
+      try {
+        // 生成重置令牌
+        const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        
+        // 保存令牌到本地
+        localStorage.setItem(`resetToken_${email}`, JSON.stringify({
+          token: resetToken,
+          expire: Date.now() + 3600000 // 1小時有效期
+        }));
+
+        // 調用後端發送郵件接口
+        const response = await fetch(`${API_DOMAIN}/api/send-reset-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            resetToken: resetToken,
+            tenantName: tenantName
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert('重置密碼郵件已發送，請檢查您的信箱！');
+        } else {
+          alert('郵件發送失敗：' + result.msg);
+        }
+      } catch (err) {
+        console.error('發送郵件錯誤:', err);
+        alert('網絡錯誤，請稍後再試');
+      }
+    }
+
+    // 7. 頁面初始化
     function init() {
       // 驗證登入
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -729,11 +832,13 @@
       renderPaymentList();
       loadRoomImages(currentTenant.room);
     }
+
     // 登出功能
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('currentTenant');
       window.location.href = 'index.html';
     });
+
     // 頁面加載完成初始化
     window.addEventListener('load', init);
   </script>

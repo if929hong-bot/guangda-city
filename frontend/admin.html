@@ -259,7 +259,24 @@
       background-color: #f8f9fa;
       color: #1f4e8c;
     }
-    .tenant-table .btn-view-images {
+    .tenant-table tr:hover {
+      background-color: #f8f9fa;
+    }
+    /* 新增：刪除按鈕樣式 */
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
+    .btn-view-images {
       background-color: #007bff;
       color: white;
       border: none;
@@ -267,6 +284,32 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
+    }
+    /* 新增：批量操作按鈕樣式 */
+    .batch-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      align-items: center;
+    }
+    .btn-batch-delete {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-batch-delete:hover {
+      background-color: #c82333;
+    }
+    .btn-batch-delete:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
     }
     .mega-link {
       color: #007bff;
@@ -394,11 +437,22 @@
   <!-- 用戶管理標籤內容 -->
   <div class="table-container tab-content active" id="tenantTabContent">
     <input type="text" class="search-input" placeholder="搜尋用戶姓名、電話或房間號..." id="tenantSearch">
+    
+    <!-- 新增：批量操作區域 -->
+    <div class="batch-actions">
+      <input type="checkbox" id="selectAllTenants">
+      <label for="selectAllTenants">全選</label>
+      <button class="btn-batch-delete" id="batchDeleteBtn" disabled>
+        <i class="fa-solid fa-trash"></i> 批量刪除選中租客
+      </button>
+    </div>
+
     <div class="empty-text" id="emptyTenantText">暫無用戶資料</div>
     <!-- 新增租客列表表格（預設隱藏，有數據時顯示） -->
     <table class="tenant-table" id="tenantTable" style="display: none;">
       <thead>
         <tr>
+          <th><input type="checkbox" id="tableSelectAll"></th> <!-- 新增：全選框 -->
           <th>姓名</th>
           <th>電話</th>
           <th>信箱</th>
@@ -576,6 +630,9 @@
           row.style.display = text.includes(keyword) ? '' : 'none';
         });
       });
+
+      // 新增：綁定全選事件
+      bindSelectAllEvents();
     });
 
     // 儲存/更新繳租資訊 - 增強版
@@ -664,6 +721,11 @@
       if (tenants.length === 0) {
         emptyText.style.display = 'block';
         tenantTable.style.display = 'none';
+        // 新增：清空全選框
+        document.getElementById('selectAllTenants').checked = false;
+        document.getElementById('tableSelectAll').checked = false;
+        // 新增：禁用批量刪除按鈕
+        document.getElementById('batchDeleteBtn').disabled = true;
         return;
       }
 
@@ -673,8 +735,9 @@
       tenantTableBody.innerHTML = '';
 
       // 渲染租客列表
-      tenants.forEach(tenant => {
+      tenants.forEach((tenant, index) => {
         const tr = document.createElement('tr');
+        tr.setAttribute('data-index', index); // 新增：標記索引
         // 防呆：確保屬性存在
         const name = tenant.name || '未填寫';
         const phone = tenant.phone || '未填寫';
@@ -682,15 +745,186 @@
         const room = tenant.room || '未填寫';
 
         tr.innerHTML = `
+          <td><input type="checkbox" class="tenant-checkbox" data-index="${index}"></td> <!-- 新增：單選框 -->
           <td>${name}</td>
           <td>${phone}</td>
           <td>${email}</td>
           <td>${room}</td>
           <td><a href="https://mega.nz/fm/Dt4TAKJB#${room}" target="_blank" class="mega-link">查看${room}文件夾</a></td>
-          <td><button class="btn-view-images" onclick="viewTenantImages('${room}')">查看圖片</button></td>
+          <td>
+            <button class="btn-view-images" onclick="viewTenantImages('${room}')">查看圖片</button>
+            <button class="btn-delete" onclick="deleteTenant(${index})">刪除</button> <!-- 新增：單條刪除按鈕 -->
+          </td>
         `;
         tenantTableBody.appendChild(tr);
       });
+
+      // 新增：重新綁定全選事件
+      bindSelectAllEvents();
+      // 新增：初始化批量刪除按鈕狀態
+      updateBatchDeleteBtnStatus();
+    }
+
+    // ========== 新增功能：綁定全選事件 ==========
+    function bindSelectAllEvents() {
+      // 頂部全選框
+      const selectAllTenants = document.getElementById('selectAllTenants');
+      // 表格內全選框
+      const tableSelectAll = document.getElementById('tableSelectAll');
+      // 批量刪除按鈕
+      const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+
+      // 頂部全選框變更事件
+      selectAllTenants.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        // 同步表格內全選框
+        tableSelectAll.checked = isChecked;
+        // 同步所有單選框
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        // 更新批量刪除按鈕狀態
+        batchDeleteBtn.disabled = !isChecked;
+      });
+
+      // 表格內全選框變更事件
+      tableSelectAll.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        // 同步頂部全選框
+        selectAllTenants.checked = isChecked;
+        // 同步所有單選框
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        // 更新批量刪除按鈕狀態
+        batchDeleteBtn.disabled = !isChecked;
+      });
+
+      // 單選框變更事件
+      document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateBatchDeleteBtnStatus);
+      });
+
+      // 綁定批量刪除按鈕點擊事件
+      batchDeleteBtn.addEventListener('click', batchDeleteTenants);
+    }
+
+    // ========== 新增功能：更新批量刪除按鈕狀態 ==========
+    function updateBatchDeleteBtnStatus() {
+      const checkboxes = document.querySelectorAll('.tenant-checkbox:checked');
+      const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+      // 有選中項則啟用按鈕，否則禁用
+      batchDeleteBtn.disabled = checkboxes.length === 0;
+      
+      // 同步全選框狀態
+      const allCheckboxes = document.querySelectorAll('.tenant-checkbox');
+      const selectAllTenants = document.getElementById('selectAllTenants');
+      const tableSelectAll = document.getElementById('tableSelectAll');
+      
+      if (allCheckboxes.length === 0) {
+        selectAllTenants.checked = false;
+        tableSelectAll.checked = false;
+      } else if (checkboxes.length === allCheckboxes.length) {
+        selectAllTenants.checked = true;
+        tableSelectAll.checked = true;
+      } else {
+        selectAllTenants.checked = false;
+        tableSelectAll.checked = false;
+      }
+    }
+
+    // ========== 新增功能：單條刪除租客 ==========
+    function deleteTenant(index) {
+      if (!confirm('確定要刪除該租客資訊嗎？刪除後無法復原！')) {
+        return;
+      }
+
+      try {
+        let tenants = JSON.parse(localStorage.getItem('gdcTenants')) || [];
+        // 刪除對應索引的租客
+        tenants.splice(index, 1);
+        // 保存更新後的數據
+        localStorage.setItem('gdcTenants', JSON.stringify(tenants));
+        
+        // 同步刪除該租客的圖片和繳費記錄（可選，根據需求調整）
+        deleteTenantRelatedData(tenants, index);
+        
+        // 重新加載租客列表和統計數據
+        loadTenantList();
+        loadStatsData();
+        
+        alert('租客資訊刪除成功！');
+      } catch (e) {
+        console.error('刪除租客失敗:', e);
+        alert('刪除租客資訊失敗，請稍後再試！');
+      }
+    }
+
+    // ========== 新增功能：批量刪除租客 ==========
+    function batchDeleteTenants() {
+      const checkedCheckboxes = document.querySelectorAll('.tenant-checkbox:checked');
+      if (checkedCheckboxes.length === 0) {
+        alert('請先選擇要刪除的租客！');
+        return;
+      }
+
+      if (!confirm(`確定要刪除選中的${checkedCheckboxes.length}位租客資訊嗎？刪除後無法復原！`)) {
+        return;
+      }
+
+      try {
+        let tenants = JSON.parse(localStorage.getItem('gdcTenants')) || [];
+        // 獲取選中的索引（倒序刪除，避免索引混亂）
+        const selectedIndexes = Array.from(checkedCheckboxes)
+          .map(checkbox => parseInt(checkbox.getAttribute('data-index')))
+          .sort((a, b) => b - a);
+        
+        // 刪除選中的租客
+        selectedIndexes.forEach(index => {
+          tenants.splice(index, 1);
+        });
+        
+        // 保存更新後的數據
+        localStorage.setItem('gdcTenants', JSON.stringify(tenants));
+        
+        // 同步刪除選中租客的相關數據
+        selectedIndexes.forEach(index => {
+          deleteTenantRelatedData(tenants, index);
+        });
+        
+        // 重新加載租客列表和統計數據
+        loadTenantList();
+        loadStatsData();
+        
+        alert(`成功刪除${selectedIndexes.length}位租客資訊！`);
+      } catch (e) {
+        console.error('批量刪除租客失敗:', e);
+        alert('批量刪除租客資訊失敗，請稍後再試！');
+      }
+    }
+
+    // ========== 新增功能：刪除租客相關數據（圖片/繳費記錄） ==========
+    function deleteTenantRelatedData(tenants, index) {
+      try {
+        // 獲取要刪除的租客房號
+        const tenant = tenants[index];
+        if (!tenant || !tenant.room) return;
+        const room = tenant.room;
+        
+        // 刪除該房號的圖片
+        let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+        if (roomImages[room]) {
+          delete roomImages[room];
+          localStorage.setItem('roomImages', JSON.stringify(roomImages));
+        }
+        
+        // 刪除該房號的繳費記錄
+        let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+        paymentRecords = paymentRecords.filter(record => record.room !== room);
+        localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
+      } catch (e) {
+        console.error('刪除租客相關數據失敗:', e);
+      }
     }
 
     // ========== 新增功能：加載統計數據 ==========
