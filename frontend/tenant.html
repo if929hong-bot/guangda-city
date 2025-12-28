@@ -139,7 +139,7 @@
     .empty-btn.blue {
       background-color: #007bff;
     }
-    /* 彈窗樣式 */
+    /* 彈窗樣式 - 直接改用固定定位+手動控制坐標 */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -147,9 +147,6 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
       z-index: 1000;
       display: none; /* 預設隱藏 */
     }
@@ -160,10 +157,11 @@
       border-radius: 8px;
       box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
       overflow: hidden;
-      position: absolute; /* 新增：用absolute實現拖拽 */
-      top: 50%;
+      position: fixed; /* 直接用fixed定位 */
+      top: 20%; /* 初始位置 */
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
+      z-index: 1001;
     }
     .modal-header {
       padding: 15px 20px;
@@ -172,8 +170,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: move; /* 新增：鼠標變拖拽樣式 */
-      user-select: none; /* 新增：防止選中文字 */
+      cursor: move; /* 強制手型 */
     }
     .modal-title {
       font-size: 16px;
@@ -185,7 +182,6 @@
       color: white;
       font-size: 20px;
       cursor: pointer;
-      cursor: default; /* 覆蓋拖拽cursor */
     }
     .modal-body {
       padding: 20px;
@@ -353,7 +349,7 @@
       </div>
     </div>
     <button class="logout-btn" id="logoutBtn">
-      <i class="fa-solid fa-right-from-bracket"></i> 登出
+      <<i class="fa-solid fa-right-from-bracket"></</i> 登出
     </button>
   </div>
 
@@ -389,7 +385,7 @@
     <div class="section-header">
       <div class="section-title">租約繳費記錄</div>
       <button class="btn-green" id="openPaymentModal">
-        <i class="fa-solid fa-plus"></i> 新增繳費記錄
+        <<i class="fa-solid fa-plus"></</i> 新增繳費記錄
       </button>
     </div>
     <div class="empty-state">
@@ -403,7 +399,7 @@
     <div class="section-header">
       <div class="section-title">我的相簿</div>
       <button class="btn-blue" id="openUploadModal">
-        <i class="fa-solid fa-plus"></i> 上傳圖片
+        <<i class="fa-solid fa-plus"></</i> 上傳圖片
       </button>
     </div>
     <div class="empty-state" id="imagesEmptyState">
@@ -419,7 +415,7 @@
     <div class="modal" id="paymentModalContent">
       <div class="modal-header" id="paymentModalHeader">
         <div class="modal-title">新增繳費記錄</div>
-        <button class="modal-close" id="closePaymentModal"><i class="fa-solid fa-xmark"></i></button>
+        <button class="modal-close" id="closePaymentModal"><<i class="fa-solid fa-xmark"></</i></button>
       </div>
       <div class="modal-body">
         <form class="modal-form">
@@ -512,7 +508,7 @@
     <div class="modal upload-modal" id="uploadModalContent">
       <div class="modal-header" id="uploadModalHeader">
         <div class="modal-title">上傳圖片</div>
-        <button class="modal-close" id="closeUploadModal"><i class="fa-solid fa-xmark"></i></button>
+        <button class="modal-close" id="closeUploadModal"><<i class="fa-solid fa-xmark"></</i></button>
       </div>
       <div class="modal-body">
         <form class="modal-form">
@@ -537,35 +533,22 @@
   <script>
     // 電費自動計算函數
     function calculateElectricity() {
-      // 获取输入值（转数字，空值设为0）
       const lastElectricity = parseFloat(document.getElementById('lastElectricity').value) || 0;
       const currentElectricity = parseFloat(document.getElementById('currentElectricity').value) || 0;
       const electricityPrice = parseFloat(document.getElementById('electricityPrice').value) || 0;
-      
-      // 計算用電量（本月 - 上月，最小為0）
       const electricityUsage = Math.max(0, currentElectricity - lastElectricity);
-      // 計算電費總價（用電量 * 每度電費）
       const electricityTotal = electricityUsage * electricityPrice;
-      
-      // 填充計算結果（保留2位小數）
       document.getElementById('electricityUsage').value = electricityUsage.toFixed(1);
       document.getElementById('electricityTotal').value = electricityTotal.toFixed(2);
-      
-      // 同步更新總金額
       calculateTotal();
     }
 
-    // 總金額自動計算函數（房租 + 電費 + 水費）
+    // 總金額自動計算函數
     function calculateTotal() {
-      // 获取各項金額
       const rent = parseFloat(document.getElementById('rent').value) || 0;
       const electricityTotal = parseFloat(document.getElementById('electricityTotal').value) || 0;
       const waterTotal = parseFloat(document.getElementById('waterTotal').value) || 0;
-      
-      // 計算總金額
       const totalAmount = rent + electricityTotal + waterTotal;
-      
-      // 填充總金額（保留2位小數）
       document.getElementById('totalAmount').value = totalAmount.toFixed(2);
     }
 
@@ -582,7 +565,7 @@
     // 打開新增繳費彈窗
     openPaymentBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        paymentModal.style.display = 'flex';
+        paymentModal.style.display = 'block';
       });
     });
 
@@ -596,7 +579,7 @@
     // 打開上傳圖片彈窗
     openUploadBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        uploadModal.style.display = 'flex';
+        uploadModal.style.display = 'block';
       });
     });
 
@@ -613,171 +596,121 @@
       if (e.target === uploadModal) uploadModal.style.display = 'none';
     });
 
-    // ========== 新增：彈窗拖拽功能 ==========
-    function initModalDrag(modalHeader, modalContent) {
+    // ========== 簡化版拖拽功能（直接控制fixed定位） ==========
+    function makeModalDraggable(modalHeader, modalContent) {
       let isDragging = false;
-      let startX, startY, offsetX, offsetY;
+      let startX, startY, modalX, modalY;
 
-      // 鼠標按下：開始拖拽
+      // 鼠標按下：記錄初始位置
       modalHeader.addEventListener('mousedown', (e) => {
-        // 排除關閉按鈕（點擊關閉按鈕不觸發拖拽）
-        if (e.target.closest('.modal-close')) return;
-        
+        if (e.target.closest('.modal-close')) return; // 跳過關閉按鈕
         isDragging = true;
-        // 記錄鼠標初始位置
+        // 記錄鼠標和彈窗的初始坐標
         startX = e.clientX;
         startY = e.clientY;
-        
-        // 記錄彈窗當前位置
-        const rect = modalContent.getBoundingClientRect();
-        offsetX = rect.left;
-        offsetY = rect.top;
-        
-        // 提升鼠標優先級
-        modalContent.style.zIndex = 1001;
-        
-        // 防止選中文字
+        modalX = modalContent.offsetLeft;
+        modalY = modalContent.offsetTop;
         e.preventDefault();
       });
 
       // 鼠標移動：更新彈窗位置
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        
         // 計算移動距離
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        
-        // 更新彈窗位置
-        modalContent.style.left = `${offsetX + dx}px`;
-        modalContent.style.top = `${offsetY + dy}px`;
-        modalContent.style.transform = 'none'; // 取消居中變換
+        // 直接修改fixed定位的left/top
+        modalContent.style.left = `${modalX + dx}px`;
+        modalContent.style.top = `${modalY + dy}px`;
+        modalContent.style.transform = 'none'; // 取消居中
       });
 
       // 鼠標鬆開：結束拖拽
       document.addEventListener('mouseup', () => {
-        if (isDragging) {
-          isDragging = false;
-          modalContent.style.zIndex = 1000; // 恢復z-index
-        }
-      });
-
-      // 鼠標離開視窗：結束拖拽
-      document.addEventListener('mouseleave', () => {
         isDragging = false;
       });
     }
 
-    // 初始化兩個彈窗的拖拽
-    initModalDrag(
+    // 初始化拖拽
+    makeModalDraggable(
       document.getElementById('paymentModalHeader'),
       document.getElementById('paymentModalContent')
     );
-    initModalDrag(
+    makeModalDraggable(
       document.getElementById('uploadModalHeader'),
       document.getElementById('uploadModalContent')
     );
 
-    // 租客頁面登出功能（核心修復：清除登入狀態）
+    // 租客頁面登出功能
     document.getElementById('logoutBtn').addEventListener('click', () => {
       if (confirm('確定要登出嗎？')) {
-        // 清除本地存儲的登入狀態
         localStorage.removeItem('currentTenant');
         sessionStorage.removeItem('currentTenant');
-        // 跳轉到登入頁
         window.location.href = 'index.html';
       }
     });
 
-    // 加載並顯示繳租銀行資訊
+    // 加載銀行資訊
     function loadBankInfo() {
       const bankInfoGrid = document.getElementById('bankInfoGrid');
       const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
-      
-      // 清空原有內容
       bankInfoGrid.innerHTML = '';
-      
-      // 判斷是否有儲存的銀行資訊
       if (!paymentInfo.bankName || !paymentInfo.branchName || !paymentInfo.accountName || !paymentInfo.accountNumber) {
         bankInfoGrid.innerHTML = '<div class="bank-info-empty">管理員尚未設定繳租銀行資訊</div>';
         return;
       }
-      
-      // 動態生成銀行資訊展示項
       const bankInfoItems = [
         { label: '銀行名稱', value: paymentInfo.bankName },
         { label: '分行名稱', value: paymentInfo.branchName },
         { label: '戶名', value: paymentInfo.accountName },
         { label: '銀行帳號', value: paymentInfo.accountNumber }
       ];
-      
       bankInfoItems.forEach(item => {
         const infoItem = document.createElement('div');
         infoItem.className = 'bank-info-item';
-        infoItem.innerHTML = `
-          <span class="bank-info-label">${item.label}</span>
-          <span class="bank-info-value">${item.value}</span>
-        `;
+        infoItem.innerHTML = `<span class="bank-info-label">${item.label}</span><span class="bank-info-value">${item.value}</span>`;
         bankInfoGrid.appendChild(infoItem);
       });
     }
 
-    // ========== 核心修復：租客個人信息加載 + 登入驗證 ==========
-    // 加載當前租客信息
+    // 加載租客信息
     function loadTenantProfile() {
-      // 優先從 localStorage/sessionStorage 獲取當前登錄租客
       let currentTenant = null;
       try {
-        currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || 
-                        JSON.parse(sessionStorage.getItem('currentTenant'));
+        currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || JSON.parse(sessionStorage.getItem('currentTenant'));
       } catch (e) {
-        console.error('讀取租客信息失敗：', e);
         currentTenant = null;
       }
-
-      // 驗證登入狀態（核心修復：嚴格驗證）
       if (!currentTenant || !currentTenant.name || !currentTenant.phone || !currentTenant.room) {
         alert('您尚未登入，請先登入系統！');
         window.location.href = 'index.html';
         return;
       }
-
-      // 更新頁面顯示的個人信息（核心修復：動態填充真實數據）
       document.getElementById('profileName').textContent = `歡迎回來，${currentTenant.name}`;
       document.getElementById('profileAvatar').textContent = currentTenant.name.charAt(0) || '租';
       document.getElementById('cardName').textContent = currentTenant.name;
       document.getElementById('cardRoom').textContent = currentTenant.room;
-
-      // 加載租客已上傳的圖片
       loadTenantImages(currentTenant.room);
     }
 
-    // 加載租客已上傳的圖片
+    // 加載租客圖片
     async function loadTenantImages(room) {
       try {
-        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
-          method: 'GET'
-        });
+        const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`);
         const result = await res.json();
-
         const emptyState = document.getElementById('imagesEmptyState');
         const imagesGrid = document.getElementById('imagesGrid');
         const cardImageCount = document.getElementById('cardImageCount');
-
         if (!result.success || result.data.length === 0) {
           emptyState.style.display = 'block';
           imagesGrid.style.display = 'none';
           cardImageCount.textContent = '0';
           return;
         }
-
-        // 顯示圖片列表
         emptyState.style.display = 'none';
         imagesGrid.style.display = 'grid';
         cardImageCount.textContent = result.data.length;
         imagesGrid.innerHTML = '';
-
-        // 渲染圖片
         result.data.forEach(img => {
           const imageItem = document.createElement('div');
           imageItem.className = 'image-item';
@@ -785,31 +718,23 @@
           imagesGrid.appendChild(imageItem);
         });
       } catch (error) {
-        console.error('加載圖片失敗：', error);
         document.getElementById('cardImageCount').textContent = '0';
       }
     }
 
-    // 圖片上傳按鈕綁定
+    // 圖片上傳
     document.getElementById('selectFileBtn').addEventListener('click', () => {
       document.getElementById('fileInput').click();
     });
-
-    // 選擇文件後更新顯示文本
     document.getElementById('fileInput').addEventListener('change', (e) => {
       const files = e.target.files;
-      const text = files.length === 0 ? '未選擇任何檔案' : 
-                   files.length === 1 ? `已選擇：${files[0].name}` : 
-                   `已選擇${files.length}個檔案`;
+      const text = files.length === 0 ? '未選擇任何檔案' : files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
       document.getElementById('fileSelectedText').textContent = text;
     });
-
-    // 確認上傳圖片
     document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
       const files = document.getElementById('fileInput').files;
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant')) || JSON.parse(sessionStorage.getItem('currentTenant'));
       const room = currentTenant?.room;
-
       if (files.length === 0) {
         alert('請選擇要上傳的圖片！');
         return;
@@ -819,62 +744,44 @@
         window.location.href = 'index.html';
         return;
       }
-
-      // 禁用按鈕
       const confirmBtn = document.getElementById('confirmUploadBtn');
       confirmBtn.disabled = true;
       confirmBtn.textContent = '上傳中...';
-
       try {
-        // 構建FormData
         const formData = new FormData();
         for (let i = 0; i < files.length; i++) {
           formData.append('images', files[i]);
         }
         formData.append('room', room);
-
-        // 調用後端上傳接口
         const res = await fetch('https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/upload-image', {
           method: 'POST',
           body: formData
         });
         const result = await res.json();
-
         if (result.success) {
           alert(`成功上傳${result.data.length}張圖片！`);
-          // 關閉彈窗
           uploadModal.style.display = 'none';
-          // 重置文件選擇
           document.getElementById('fileInput').value = '';
           document.getElementById('fileSelectedText').textContent = '未選擇任何檔案';
-          // 重新加載圖片
           loadTenantImages(room);
         } else {
           alert('上傳失敗：' + result.message);
         }
       } catch (error) {
-        console.error('上傳失敗：', error);
         alert('網路錯誤，請稍後再試！');
       } finally {
-        // 恢復按鈕
         confirmBtn.disabled = false;
         confirmBtn.textContent = '上傳';
       }
     });
 
-    // 頁面加載時執行（核心修復：優先驗證登入狀態）
+    // 頁面加載
     window.addEventListener('load', () => {
-      // 第一步：驗證並加載租客信息
       loadTenantProfile();
-      // 第二步：加載銀行資訊
       loadBankInfo();
     });
-
-    // 監聽本地存儲變化，即時更新銀行資訊
     window.addEventListener('storage', (e) => {
-      if (e.key === 'paymentInfo') {
-        loadBankInfo();
-      }
+      if (e.key === 'paymentInfo') loadBankInfo();
     });
   </script>
 </body>
