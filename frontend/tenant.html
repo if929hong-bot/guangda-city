@@ -160,6 +160,10 @@
       border-radius: 8px;
       box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
       overflow: hidden;
+      position: absolute; /* 新增：用absolute實現拖拽 */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
     .modal-header {
       padding: 15px 20px;
@@ -168,6 +172,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: move; /* 新增：鼠標變拖拽樣式 */
+      user-select: none; /* 新增：防止選中文字 */
     }
     .modal-title {
       font-size: 16px;
@@ -179,6 +185,7 @@
       color: white;
       font-size: 20px;
       cursor: pointer;
+      cursor: default; /* 覆蓋拖拽cursor */
     }
     .modal-body {
       padding: 20px;
@@ -409,8 +416,8 @@
 
   <!-- 新增繳費記錄彈窗 -->
   <div class="modal-overlay" id="paymentModal">
-    <div class="modal">
-      <div class="modal-header">
+    <div class="modal" id="paymentModalContent">
+      <div class="modal-header" id="paymentModalHeader">
         <div class="modal-title">新增繳費記錄</div>
         <button class="modal-close" id="closePaymentModal"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -502,8 +509,8 @@
 
   <!-- 上傳圖片彈窗 -->
   <div class="modal-overlay" id="uploadModal">
-    <div class="modal upload-modal">
-      <div class="modal-header">
+    <div class="modal upload-modal" id="uploadModalContent">
+      <div class="modal-header" id="uploadModalHeader">
         <div class="modal-title">上傳圖片</div>
         <button class="modal-close" id="closeUploadModal"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -605,6 +612,71 @@
       if (e.target === paymentModal) paymentModal.style.display = 'none';
       if (e.target === uploadModal) uploadModal.style.display = 'none';
     });
+
+    // ========== 新增：彈窗拖拽功能 ==========
+    function initModalDrag(modalHeader, modalContent) {
+      let isDragging = false;
+      let startX, startY, offsetX, offsetY;
+
+      // 鼠標按下：開始拖拽
+      modalHeader.addEventListener('mousedown', (e) => {
+        // 排除關閉按鈕（點擊關閉按鈕不觸發拖拽）
+        if (e.target.closest('.modal-close')) return;
+        
+        isDragging = true;
+        // 記錄鼠標初始位置
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        // 記錄彈窗當前位置
+        const rect = modalContent.getBoundingClientRect();
+        offsetX = rect.left;
+        offsetY = rect.top;
+        
+        // 提升鼠標優先級
+        modalContent.style.zIndex = 1001;
+        
+        // 防止選中文字
+        e.preventDefault();
+      });
+
+      // 鼠標移動：更新彈窗位置
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        // 計算移動距離
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        // 更新彈窗位置
+        modalContent.style.left = `${offsetX + dx}px`;
+        modalContent.style.top = `${offsetY + dy}px`;
+        modalContent.style.transform = 'none'; // 取消居中變換
+      });
+
+      // 鼠標鬆開：結束拖拽
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          modalContent.style.zIndex = 1000; // 恢復z-index
+        }
+      });
+
+      // 鼠標離開視窗：結束拖拽
+      document.addEventListener('mouseleave', () => {
+        isDragging = false;
+      });
+    }
+
+    // 初始化兩個彈窗的拖拽
+    initModalDrag(
+      document.getElementById('paymentModalHeader'),
+      document.getElementById('paymentModalContent')
+    );
+    initModalDrag(
+      document.getElementById('uploadModalHeader'),
+      document.getElementById('uploadModalContent')
+    );
 
     // 租客頁面登出功能（核心修復：清除登入狀態）
     document.getElementById('logoutBtn').addEventListener('click', () => {
