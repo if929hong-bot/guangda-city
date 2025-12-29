@@ -1,13 +1,13 @@
 {
   "name": "tenant-email-server",
   "version": "1.0.0",
-  "main": "backend/server.js",  
+  "main": "server.js",  
   "scripts": {
-    "start": "node backend/server.js", 
+    "start": "node server.js", 
     "preinstall": "nvm use 18.20.3 || true" 
   },
   "engines": {  
-    "node": "18.x"
+    "node": "18.x"  
   },
   "dependencies": {
     "@sendgrid/mail": "^7.7.0",
