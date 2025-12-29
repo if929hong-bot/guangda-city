@@ -1,0 +1,22 @@
+{
+  "name": "tenant-email-server",
+  "version": "1.0.0",
+  "main": "server.js",  
+  "scripts": {
+    "start": "node server.js"  
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "mega": "^0.2.0",  
+    "multer": "^2.0.2",
+    "redis": "^4.6.12"  
+  },
+  "description": "廣大城後端服務（MEGA上傳+郵件發送）",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
