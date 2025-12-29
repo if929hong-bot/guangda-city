@@ -16,8 +16,9 @@
     body {
       background-color: #f5f7fa;
       padding: 20px;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
+      overflow-x: hidden;
     }
 
     .admin-header {
@@ -416,7 +417,7 @@
   <div class="admin-header">
     <h1 class="admin-title">廣大城租客管理 - 管理員後台</h1>
     <button class="logout-btn" id="logoutBtn">
-      <<i class="fa-solid fa-right-from-bracket"></</i> 登出
+      <i class="fa-solid fa-right-from-bracket"></i> 登出
     </button>
   </div>
 
@@ -446,7 +447,7 @@
         <div class="error-message" id="accountNumberError">請輸入銀行帳號</div>
       </div>
       <button type="button" class="btn-save" id="savePaymentInfoBtn">
-        <<i class="fa-solid fa-save"></</i> 儲存資訊
+        <i class="fa-solid fa-save"></i> 儲存資訊
       </button>
       <div class="save-success" id="saveSuccess">✅ 儲存成功！</div>
     </form>
@@ -487,20 +488,20 @@
       <input type="checkbox" id="selectAllTenants">
       <label for="selectAllTenants">全選</label>
       <button class="btn-batch-delete" id="batchDeleteTenantBtn" disabled>
-        <<i class="fa-solid fa-trash"></</i> 批量刪除選中租客
+        <i class="fa-solid fa-trash"></i> 批量刪除選中租客
       </button>
     </div>
     <div class="empty-text" id="emptyTenantText">暫無用戶資料</div>
     <table class="tenant-table" id="tenantTable" style="display: none;">
       <thead>
         <tr>
-          <<th><input type="checkbox" id="tableSelectAllTenants"></</th>
-          <<th>姓名</</th>
-          <<th>電話</</th>
-          <<th>信箱</</th>
-          <<th>房號</</th>
-          <<th>MEGA文件夾</</th>
-          <<th>操作</</th>
+          <th><input type="checkbox" id="tableSelectAllTenants"></th>
+          <th>姓名</th>
+          <th>電話</th>
+          <th>信箱</th>
+          <th>房號</th>
+          <th>MEGA文件夾</th>
+          <th>操作</th>
         </tr>
       </thead>
       <tbody id="tenantTableBody"></tbody>
@@ -509,20 +510,20 @@
 
   <div class="table-container tab-content active" id="albumTabContent">
     <button class="btn-add" id="addAlbumBtn">
-      <<i class="fa-solid fa-plus"></</i> 新增相簿
+      <i class="fa-solid fa-plus"></i> 新增相簿
     </button>
     <input type="text" class="search-input" placeholder="搜尋房間號..." id="albumSearch">
     <div class="empty-text" id="emptyAlbumText">暫無相簿資料</div>
     <table class="album-table" id="albumTable" style="display: none;">
       <thead>
         <tr>
-          <<th><input type="checkbox" id="tableSelectAllAlbums"></</th>
-          <<th>房號</</th>
-          <<th>相簿名稱</</th>
-          <<th>圖片數量</</th>
-          <<th>建立時間</</th>
-          <<th>MEGA文件夾</</th>
-          <<th>操作</</th>
+          <th><input type="checkbox" id="tableSelectAllAlbums"></th>
+          <th>房號</th>
+          <th>相簿名稱</th>
+          <th>圖片數量</th>
+          <th>建立時間</th>
+          <th>MEGA文件夾</th>
+          <th>操作</th>
         </tr>
       </thead>
       <tbody id="albumTableBody"></tbody>
@@ -531,33 +532,33 @@
 
   <div class="table-container tab-content" id="paymentTabContent">
     <button class="btn-add" id="addPaymentBtn">
-      <<i class="fa-solid fa-plus"></</i> 新增繳費記錄
+      <i class="fa-solid fa-plus"></i> 新增繳費記錄
     </button>
     <input type="text" class="search-input" placeholder="搜尋租客姓名、房號或繳費區間..." id="paymentSearch">
     <div class="batch-actions">
       <input type="checkbox" id="selectAllPayments">
       <label for="selectAllPayments">全選</label>
       <button class="btn-batch-delete" id="batchDeletePaymentBtn" disabled>
-        <<i class="fa-solid fa-trash"></</i> 批量刪除選中記錄
+        <i class="fa-solid fa-trash"></i> 批量刪除選中記錄
       </button>
     </div>
     <div class="empty-text" id="emptyPaymentText">暫無繳費記錄</div>
     <table class="payment-table" id="paymentTable" style="display: none;">
       <thead>
         <tr>
-          <<th><input type="checkbox" id="tableSelectAllPayments"></</th>
-          <<th>租客姓名</</th>
-          <<th>房號</</th>
-          <<th>租約期間</</th>
-          <<th>繳費區間</</th>
-          <<th>房租</</th>
-          <<th>電費</</th>
-          <<th>水費</</th>
-          <<th>總金額</</th>
-          <<th>匯款日期</</th>
-          <<th>匯款後五碼</</th>
-          <<th>新增時間</</th>
-          <<th>操作</</th>
+          <th><input type="checkbox" id="tableSelectAllPayments"></th>
+          <th>租客姓名</th>
+          <th>房號</th>
+          <th>租約期間</th>
+          <th>繳費區間</th>
+          <th>房租</th>
+          <th>電費</th>
+          <th>水費</th>
+          <th>總金額</th>
+          <th>匯款日期</th>
+          <th>匯款後五碼</th>
+          <th>新增時間</th>
+          <th>操作</th>
         </tr>
       </thead>
       <tbody id="paymentTableBody"></tbody>
@@ -586,7 +587,7 @@
           <input type="text" id="albumImageUrls" class="form-input" placeholder="https://xxx.jpg,https://yyy.jpg">
         </div>
         <button type="button" class="btn-submit" id="submitAlbumBtn">
-          <<i class="fa-solid fa-save"></</i> 新增相簿
+          <i class="fa-solid fa-save"></i> 新增相簿
         </button>
         <div class="save-success" id="albumSaveSuccess">✅ 新增成功！</div>
       </form>
@@ -641,7 +642,7 @@
           <input type="text" id="paymentLast5" class="form-input" placeholder="請輸入匯款帳號後五碼">
         </div>
         <button type="button" class="btn-submit" id="submitPaymentBtn">
-          <<i class="fa-solid fa-save"></</i> 新增繳費記錄
+          <i class="fa-solid fa-save"></i> 新增繳費記錄
         </button>
         <div class="save-success" id="paymentSaveSuccess">✅ 新增成功！</div>
       </form>
@@ -728,7 +729,7 @@
       if (!validateForm()) return;
 
       savePaymentInfoBtn.disabled = true;
-      savePaymentInfoBtn.innerHTML = '<<i class="fa-solid fa-spinner fa-spin"></</i> 處理中...';
+      savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
 
       try {
         const paymentInfo = {
@@ -745,14 +746,14 @@
         setTimeout(() => {
           saveSuccess.style.display = 'none';
           savePaymentInfoBtn.disabled = false;
-          savePaymentInfoBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 儲存資訊';
+          savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-save"></i> 儲存資訊';
         }, 2000);
 
       } catch (e) {
         console.error('儲存繳租資訊失敗:', e);
         alert('儲存失敗，請稍後再試！');
         savePaymentInfoBtn.disabled = false;
-        savePaymentInfoBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 儲存資訊';
+        savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-save"></i> 儲存資訊';
       }
     });
 
@@ -1149,7 +1150,7 @@
       
       document.getElementById('albumSaveSuccess').style.display = 'none';
       
-      document.getElementById('submitAlbumBtn').innerHTML = '<<i class="fa-solid fa-save"></</i> 新增相簿';
+      document.getElementById('submitAlbumBtn').innerHTML = '<i class="fa-solid fa-save"></i> 新增相簿';
     }
 
     function validateAlbumForm() {
@@ -1182,7 +1183,7 @@
 
       const submitBtn = document.getElementById('submitAlbumBtn');
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<<i class="fa-solid fa-spinner fa-spin"></</i> 處理中...';
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
 
       try {
         let albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
@@ -1223,14 +1224,14 @@
           loadAlbumData();
           loadStatsData();
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 新增相簿';
+          submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增相簿';
         }, 1500);
 
       } catch (e) {
         console.error('新增相簿失敗:', e);
         alert('新增相簿失敗，請稍後再試！');
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 新增相簿';
+        submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增相簿';
       }
     }
 
@@ -1251,7 +1252,7 @@
           document.getElementById('albumImageUrls').value = '';
         }
         
-        document.getElementById('submitAlbumBtn').innerHTML = '<<i class="fa-solid fa-save"></</i> 保存修改';
+        document.getElementById('submitAlbumBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
         
         document.getElementById('addAlbumModal').style.display = 'flex';
       } catch (e) {
@@ -1387,7 +1388,7 @@
       
       document.getElementById('paymentSaveSuccess').style.display = 'none';
       
-      document.getElementById('submitPaymentBtn').innerHTML = '<<i class="fa-solid fa-save"></</i> 新增繳費記錄';
+      document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
     }
 
     function validatePaymentForm() {
@@ -1439,7 +1440,7 @@
 
       const submitBtn = document.getElementById('submitPaymentBtn');
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<<i class="fa-solid fa-spinner fa-spin"></</i> 處理中...';
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
 
       try {
         let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
@@ -1480,14 +1481,14 @@
           loadPaymentRecords();
           loadStatsData();
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 新增繳費記錄';
+          submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
         }, 1500);
 
       } catch (e) {
         console.error('新增繳費記錄失敗:', e);
         alert('新增繳費記錄失敗，請稍後再試！');
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 新增繳費記錄';
+        submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
       }
     }
 
@@ -1508,7 +1509,7 @@
         document.getElementById('paymentDate').value = record.paymentDate || '';
         document.getElementById('paymentLast5').value = record.paymentLast5 || '';
         
-        document.getElementById('submitPaymentBtn').innerHTML = '<<i class="fa-solid fa-save"></</i> 保存修改';
+        document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
         
         document.getElementById('addPaymentModal').style.display = 'flex';
       } catch (e) {
