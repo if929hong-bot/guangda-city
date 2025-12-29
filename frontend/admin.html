@@ -54,6 +54,75 @@
       background-color: #c82333;
     }
 
+    /* 新增按鈕通用樣式 */
+    .btn-add {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+
+    .btn-add:hover {
+      background-color: #0056b3;
+    }
+
+    /* 彈窗樣式 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      border-radius: 8px;
+      padding: 25px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      color: #1f4e8c;
+      font-weight: bold;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #666;
+      cursor: pointer;
+    }
+
+    .close-modal:hover {
+      color: #dc3545;
+    }
+
     /* 新增繳租資訊樣式 */
     .payment-info-section {
       max-width: 1200px;
@@ -77,7 +146,7 @@
       font-weight: bold;
     }
 
-    .payment-info-form {
+    .payment-info-form, .add-album-form, .add-payment-form {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 15px 20px;
@@ -121,7 +190,7 @@
       display: none;
     }
 
-    .btn-save {
+    .btn-save, .btn-submit {
       background-color: #28a745;
       color: white;
       border: none;
@@ -137,11 +206,11 @@
       transition: background-color 0.3s;
     }
 
-    .btn-save:hover {
+    .btn-save:hover, .btn-submit:hover {
       background-color: #218838;
     }
 
-    .btn-save:disabled {
+    .btn-save:disabled, .btn-submit:disabled {
       background-color: #6c757d;
       cursor: not-allowed;
     }
@@ -244,25 +313,28 @@
       font-size: 14px;
     }
 
-    /* 新增租客列表表格樣式（不影響原有樣式） */
-    .tenant-table {
+    /* 租客列表表格樣式 */
+    .tenant-table, .album-table, .payment-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
     }
-    .tenant-table th, .tenant-table td {
+    .tenant-table th, .tenant-table td,
+    .album-table th, .album-table td,
+    .payment-table th, .payment-table td {
       border: 1px solid #ddd;
       padding: 10px;
       text-align: left;
     }
-    .tenant-table th {
+    .tenant-table th, .album-table th, .payment-table th {
       background-color: #f8f9fa;
       color: #1f4e8c;
     }
-    .tenant-table tr:hover {
+    .tenant-table tr:hover, .album-table tr:hover, .payment-table tr:hover {
       background-color: #f8f9fa;
     }
-    /* 新增：刪除按鈕樣式 */
+
+    /* 按鈕樣式 */
     .btn-delete {
       background-color: #dc3545;
       color: white;
@@ -276,7 +348,7 @@
     .btn-delete:hover {
       background-color: #c82333;
     }
-    .btn-view-images {
+    .btn-view {
       background-color: #007bff;
       color: white;
       border: none;
@@ -285,7 +357,24 @@
       cursor: pointer;
       font-size: 12px;
     }
-    /* 新增：批量操作按鈕樣式 */
+    .btn-view:hover {
+      background-color: #0056b3;
+    }
+    .btn-edit {
+      background-color: #ffc107;
+      color: #333;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    .btn-edit:hover {
+      background-color: #e0a800;
+    }
+
+    /* 批量操作按鈕樣式 */
     .batch-actions {
       display: flex;
       gap: 10px;
@@ -314,25 +403,6 @@
     .mega-link {
       color: #007bff;
       text-decoration: none;
-    }
-
-    /* 繳費記錄表格樣式 */
-    .payment-record-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    .payment-record-table th, .payment-record-table td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-    .payment-record-table th {
-      background-color: #f8f9fa;
-      color: #1f4e8c;
-    }
-    .payment-record-table tr:hover {
-      background-color: #f8f9fa;
     }
 
     /* 圖片展示樣式 */
@@ -366,11 +436,11 @@
   <div class="admin-header">
     <h1 class="admin-title">廣大城租客管理 - 管理員後台</h1>
     <button class="logout-btn" id="logoutBtn">
-      <i class="fa-solid fa-right-from-bracket"></i> 登出
+      <<i class="fa-solid fa-right-from-bracket"></</i> 登出
     </button>
   </div>
 
-  <!-- 繳租資訊設定區塊 -->
+  <!-- 繳租銀行資訊設定區塊 -->
   <div class="payment-info-section">
     <div class="payment-info-header">
       <div class="payment-info-title">繳租銀行資訊設定</div>
@@ -397,7 +467,7 @@
         <div class="error-message" id="accountNumberError">請輸入銀行帳號</div>
       </div>
       <button type="button" class="btn-save" id="savePaymentInfoBtn">
-        <i class="fa-solid fa-save"></i> 儲存資訊
+        <<i class="fa-solid fa-save"></</i> 儲存資訊
       </button>
       <div class="save-success" id="saveSuccess">✅ 儲存成功！</div>
     </form>
@@ -411,9 +481,9 @@
       <div class="desc">已註冊租客</div>
     </div>
     <div class="stat-card">
-      <h3>總圖片數</h3>
-      <div class="value" id="totalImages">0</div>
-      <div class="desc">所有相簿</div>
+      <h3>總相簿數</h3>
+      <div class="value" id="totalAlbums">0</div>
+      <div class="desc">所有房間相簿</div>
     </div>
     <div class="stat-card">
       <h3>總繳費記錄</h3>
@@ -438,27 +508,26 @@
   <div class="table-container tab-content active" id="tenantTabContent">
     <input type="text" class="search-input" placeholder="搜尋用戶姓名、電話或房間號..." id="tenantSearch">
     
-    <!-- 新增：批量操作區域 -->
+    <!-- 批量操作區域 -->
     <div class="batch-actions">
       <input type="checkbox" id="selectAllTenants">
       <label for="selectAllTenants">全選</label>
-      <button class="btn-batch-delete" id="batchDeleteBtn" disabled>
-        <i class="fa-solid fa-trash"></i> 批量刪除選中租客
+      <button class="btn-batch-delete" id="batchDeleteTenantBtn" disabled>
+        <<i class="fa-solid fa-trash"></</i> 批量刪除選中租客
       </button>
     </div>
 
     <div class="empty-text" id="emptyTenantText">暫無用戶資料</div>
-    <!-- 新增租客列表表格（預設隱藏，有數據時顯示） -->
     <table class="tenant-table" id="tenantTable" style="display: none;">
       <thead>
         <tr>
-          <th><input type="checkbox" id="tableSelectAll"></th> <!-- 新增：全選框 -->
-          <th>姓名</th>
-          <th>電話</th>
-          <th>信箱</th>
-          <th>房號</th>
-          <th>MEGA文件夾</th>
-          <th>操作</th>
+          <<th><input type="checkbox" id="tableSelectAllTenants"></</th>
+          <<th>姓名</</th>
+          <<th>電話</</th>
+          <<th>信箱</</th>
+          <<th>房號</</th>
+          <<th>MEGA文件夾</</th>
+          <<th>操作</</th>
         </tr>
       </thead>
       <tbody id="tenantTableBody"></tbody>
@@ -467,65 +536,183 @@
 
   <!-- 相簿管理標籤內容 -->
   <div class="table-container tab-content" id="albumTabContent">
+    <button class="btn-add" id="addAlbumBtn">
+      <<i class="fa-solid fa-plus"></</i> 新增相簿
+    </button>
     <input type="text" class="search-input" placeholder="搜尋房間號..." id="albumSearch">
-    <div class="empty-text" id="emptyAlbumText">暫無圖片資料</div>
-    <div id="albumContent" style="display: none;"></div>
+    <div class="empty-text" id="emptyAlbumText">暫無相簿資料</div>
+    <table class="album-table" id="albumTable" style="display: none;">
+      <thead>
+        <tr>
+          <<th><input type="checkbox" id="tableSelectAllAlbums"></</th>
+          <<th>房號</</th>
+          <<th>相簿名稱</</th>
+          <<th>圖片數量</</th>
+          <<th>建立時間</</th>
+          <<th>MEGA文件夾</</th>
+          <<th>操作</</th>
+        </tr>
+      </thead>
+      <tbody id="albumTableBody"></tbody>
+    </table>
   </div>
 
   <!-- 繳費記錄管理標籤內容 -->
   <div class="table-container tab-content" id="paymentTabContent">
+    <button class="btn-add" id="addPaymentBtn">
+      <<i class="fa-solid fa-plus"></</i> 新增繳費記錄
+    </button>
     <input type="text" class="search-input" placeholder="搜尋租客姓名、房號或繳費區間..." id="paymentSearch">
+    
+    <!-- 批量操作區域 -->
+    <div class="batch-actions">
+      <input type="checkbox" id="selectAllPayments">
+      <label for="selectAllPayments">全選</label>
+      <button class="btn-batch-delete" id="batchDeletePaymentBtn" disabled>
+        <<i class="fa-solid fa-trash"></</i> 批量刪除選中記錄
+      </button>
+    </div>
+
     <div class="empty-text" id="emptyPaymentText">暫無繳費記錄</div>
-    <table class="payment-record-table" id="paymentRecordTable" style="display: none;">
+    <table class="payment-table" id="paymentTable" style="display: none;">
       <thead>
         <tr>
-          <th>租客姓名</th>
-          <th>房號</th>
-          <th>租約期間</th>
-          <th>繳費區間</th>
-          <th>房租</th>
-          <th>電費</th>
-          <th>水費</th>
-          <th>總金額</th>
-          <th>匯款日期</th>
-          <th>匯款後五碼</th>
-          <th>新增時間</th>
+          <<th><input type="checkbox" id="tableSelectAllPayments"></</th>
+          <<th>租客姓名</</th>
+          <<th>房號</</th>
+          <<th>租約期間</</th>
+          <<th>繳費區間</</th>
+          <<th>房租</</th>
+          <<th>電費</</th>
+          <<th>水費</</th>
+          <<th>總金額</</th>
+          <<th>匯款日期</</th>
+          <<th>匯款後五碼</</th>
+          <<th>新增時間</</th>
+          <<th>操作</</th>
         </tr>
       </thead>
-      <tbody id="paymentRecordTableBody"></tbody>
+      <tbody id="paymentTableBody"></tbody>
     </table>
   </div>
 
+  <!-- 新增相簿彈窗 -->
+  <div class="modal" id="addAlbumModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">新增相簿</h2>
+        <button class="close-modal" id="closeAlbumModal">&times;</button>
+      </div>
+      <form class="add-album-form" id="addAlbumForm">
+        <div class="form-group">
+          <label for="albumRoom">房號 *</label>
+          <input type="text" id="albumRoom" class="form-input" placeholder="請輸入房號（如：101）">
+          <div class="error-message" id="albumRoomError">請輸入房號</div>
+        </div>
+        <div class="form-group">
+          <label for="albumName">相簿名稱 *</label>
+          <input type="text" id="albumName" class="form-input" placeholder="請輸入相簿名稱">
+          <div class="error-message" id="albumNameError">請輸入相簿名稱</div>
+        </div>
+        <div class="form-group">
+          <label for="albumImageUrls">圖片URL（多張請用逗號分隔）</label>
+          <input type="text" id="albumImageUrls" class="form-input" placeholder="https://xxx.jpg,https://yyy.jpg">
+        </div>
+        <button type="button" class="btn-submit" id="submitAlbumBtn">
+          <<i class="fa-solid fa-save"></</i> 新增相簿
+        </button>
+        <div class="save-success" id="albumSaveSuccess">✅ 新增成功！</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 新增繳費記錄彈窗 -->
+  <div class="modal" id="addPaymentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">新增繳費記錄</h2>
+        <button class="close-modal" id="closePaymentModal">&times;</button>
+      </div>
+      <form class="add-payment-form" id="addPaymentForm">
+        <div class="form-group">
+          <label for="paymentTenantName">租客姓名 *</label>
+          <input type="text" id="paymentTenantName" class="form-input" placeholder="請輸入租客姓名">
+          <div class="error-message" id="paymentTenantNameError">請輸入租客姓名</div>
+        </div>
+        <div class="form-group">
+          <label for="paymentRoom">房號 *</label>
+          <input type="text" id="paymentRoom" class="form-input" placeholder="請輸入房號（如：101）">
+          <div class="error-message" id="paymentRoomError">請輸入房號</div>
+        </div>
+        <div class="form-group">
+          <label for="paymentRentalPeriod">租約期間</label>
+          <input type="text" id="paymentRentalPeriod" class="form-input" placeholder="如：2025/01-2025/12">
+        </div>
+        <div class="form-group">
+          <label for="paymentPeriod">繳費區間 *</label>
+          <input type="text" id="paymentPeriod" class="form-input" placeholder="如：2025/01">
+          <div class="error-message" id="paymentPeriodError">請輸入繳費區間</div>
+        </div>
+        <div class="form-group">
+          <label for="paymentRent">房租（元） *</label>
+          <input type="number" id="paymentRent" class="form-input" placeholder="請輸入房租金額" min="0">
+          <div class="error-message" id="paymentRentError">請輸入房租金額</div>
+        </div>
+        <div class="form-group">
+          <label for="paymentElectricity">電費（元）</label>
+          <input type="number" id="paymentElectricity" class="form-input" placeholder="請輸入電費金額" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label for="paymentWater">水費（元）</label>
+          <input type="number" id="paymentWater" class="form-input" placeholder="請輸入水費金額" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label for="paymentDate">匯款日期</label>
+          <input type="text" id="paymentDate" class="form-input" placeholder="如：2025/01/15">
+        </div>
+        <div class="form-group">
+          <label for="paymentLast5">匯款後五碼</label>
+          <input type="text" id="paymentLast5" class="form-input" placeholder="請輸入匯款帳號後五碼">
+        </div>
+        <button type="button" class="btn-submit" id="submitPaymentBtn">
+          <<i class="fa-solid fa-save"></</i> 新增繳費記錄
+        </button>
+        <div class="save-success" id="paymentSaveSuccess">✅ 新增成功！</div>
+      </form>
+    </div>
+  </div>
+
   <script>
+    // 全域變量
+    let currentEditingAlbumIndex = -1;
+    let currentEditingPaymentIndex = -1;
+
     // 後台標籤切換
     const adminTabs = document.querySelectorAll('.admin-tab');
     const tabContents = document.querySelectorAll('.tab-content');
     
     adminTabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        // 移除所有active
         adminTabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
         
-        // 當前標籤激活
         tab.classList.add('active');
         const tabId = tab.getAttribute('data-tab');
         document.getElementById(`${tabId}TabContent`).classList.add('active');
         
-        // 加載對應數據
         if (tabId === 'album') loadAlbumData();
         if (tabId === 'payment') loadPaymentRecords();
       });
     });
 
-    // 登出功能 - 僅修改這裡的跳轉路徑為 index.html
+    // 登出功能
     document.getElementById('logoutBtn').addEventListener('click', () => {
       if (confirm('確定要登出嗎？')) {
-        window.location.href = 'index.html'; // 改為跳轉到同目錄的index.html
+        window.location.href = 'index.html';
       }
     });
 
-    // 繳租資訊相關邏輯 - 增強版
+    // ========== 繳租銀行資訊設定 ==========
     const bankNameInput = document.getElementById('bankName');
     const branchNameInput = document.getElementById('branchName');
     const accountNameInput = document.getElementById('accountName');
@@ -533,7 +720,6 @@
     const savePaymentInfoBtn = document.getElementById('savePaymentInfoBtn');
     const saveSuccess = document.getElementById('saveSuccess');
     
-    // 錯誤提示元素
     const bankNameError = document.getElementById('bankNameError');
     const branchNameError = document.getElementById('branchNameError');
     const accountNameError = document.getElementById('accountNameError');
@@ -543,7 +729,6 @@
     function validateForm() {
       let isValid = true;
       
-      // 重置錯誤樣式和提示
       [bankNameInput, branchNameInput, accountNameInput, accountNumberInput].forEach(input => {
         input.classList.remove('error');
       });
@@ -551,28 +736,24 @@
         error.style.display = 'none';
       });
 
-      // 驗證銀行名稱
       if (!bankNameInput.value.trim()) {
         bankNameInput.classList.add('error');
         bankNameError.style.display = 'block';
         isValid = false;
       }
 
-      // 驗證分行名稱
       if (!branchNameInput.value.trim()) {
         branchNameInput.classList.add('error');
         branchNameError.style.display = 'block';
         isValid = false;
       }
 
-      // 驗證戶名
       if (!accountNameInput.value.trim()) {
         accountNameInput.classList.add('error');
         accountNameError.style.display = 'block';
         isValid = false;
       }
 
-      // 驗證銀行帳號
       if (!accountNumberInput.value.trim()) {
         accountNumberInput.classList.add('error');
         accountNumberError.style.display = 'block';
@@ -582,8 +763,55 @@
       return isValid;
     }
 
-    // 頁面加載時讀取本地存儲的繳租資訊
+    // 儲存繳租資訊
+    savePaymentInfoBtn.addEventListener('click', () => {
+      if (!validateForm()) return;
+
+      savePaymentInfoBtn.disabled = true;
+      savePaymentInfoBtn.innerHTML = '<<i class="fa-solid fa-spinner fa-spin"></</i> 處理中...';
+
+      try {
+        const paymentInfo = {
+          bankName: bankNameInput.value.trim(),
+          branchName: branchNameInput.value.trim(),
+          accountName: accountNameInput.value.trim(),
+          accountNumber: accountNumberInput.value.trim(),
+          updateTime: new Date().toLocaleString('zh-TW')
+        };
+
+        localStorage.setItem('paymentInfo', JSON.stringify(paymentInfo));
+        saveSuccess.style.display = 'block';
+        
+        setTimeout(() => {
+          saveSuccess.style.display = 'none';
+          savePaymentInfoBtn.disabled = false;
+          savePaymentInfoBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 儲存資訊';
+          
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'paymentInfo',
+            newValue: JSON.stringify(paymentInfo)
+          }));
+        }, 2000);
+
+      } catch (e) {
+        console.error('儲存繳租資訊失敗:', e);
+        alert('儲存失敗，請稍後再試！');
+        savePaymentInfoBtn.disabled = false;
+        savePaymentInfoBtn.innerHTML = '<<i class="fa-solid fa-save"></</i> 儲存資訊';
+      }
+    });
+
+    // 即時清除錯誤提示
+    [bankNameInput, branchNameInput, accountNameInput, accountNumberInput].forEach(input => {
+      input.addEventListener('input', () => {
+        input.classList.remove('error');
+        document.getElementById(`${input.id}Error`).style.display = 'none';
+      });
+    });
+
+    // ========== 頁面加載初始化 ==========
     window.addEventListener('load', () => {
+      // 加載繳租資訊
       try {
         const paymentInfo = JSON.parse(localStorage.getItem('paymentInfo')) || {};
         bankNameInput.value = paymentInfo.bankName || '';
@@ -595,13 +823,28 @@
         alert('讀取已保存的繳租資訊失敗，請重新輸入！');
       }
 
-      // 加載租客列表
+      // 加載各模塊數據
       loadTenantList();
-      
-      // 加載統計數據
+      loadAlbumData();
+      loadPaymentRecords();
       loadStatsData();
 
       // 綁定搜索事件
+      bindSearchEvents();
+
+      // 綁定彈窗事件
+      bindModalEvents();
+
+      // 綁定全選事件
+      bindSelectAllEvents();
+
+      // 綁定新增按鈕事件
+      bindAddButtonEvents();
+    });
+
+    // ========== 搜索事件綁定 ==========
+    function bindSearchEvents() {
+      // 租客搜索
       document.getElementById('tenantSearch').addEventListener('input', (e) => {
         const keyword = e.target.value.toLowerCase().trim();
         const rows = document.querySelectorAll('#tenantTableBody tr');
@@ -611,97 +854,144 @@
         });
       });
 
-      // 相簿搜索事件
+      // 相簿搜索
       document.getElementById('albumSearch').addEventListener('input', (e) => {
         const keyword = e.target.value.toLowerCase().trim();
-        const albumItems = document.querySelectorAll('#albumContent > div');
-        albumItems.forEach(item => {
-          const room = item.getAttribute('data-room');
-          item.style.display = room.toLowerCase().includes(keyword) ? '' : 'none';
-        });
-      });
-
-      // 繳費記錄搜索事件
-      document.getElementById('paymentSearch').addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#paymentRecordTableBody tr');
+        const rows = document.querySelectorAll('#albumTableBody tr');
         rows.forEach(row => {
           const text = row.textContent.toLowerCase();
           row.style.display = text.includes(keyword) ? '' : 'none';
         });
       });
 
-      // 新增：綁定全選事件
-      bindSelectAllEvents();
-    });
-
-    // 儲存/更新繳租資訊 - 增強版
-    savePaymentInfoBtn.addEventListener('click', () => {
-      // 表單驗證
-      if (!validateForm()) {
-        return;
-      }
-
-      // 禁用按鈕防止重複提交
-      savePaymentInfoBtn.disabled = true;
-      savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
-
-      try {
-        // 組裝資訊物件
-        const paymentInfo = {
-          bankName: bankNameInput.value.trim(),
-          branchName: branchNameInput.value.trim(),
-          accountName: accountNameInput.value.trim(),
-          accountNumber: accountNumberInput.value.trim(),
-          updateTime: new Date().toLocaleString('zh-TW') // 新增更新時間
-        };
-
-        // 儲存到本地存儲（覆蓋原有數據 = 更新）
-        localStorage.setItem('paymentInfo', JSON.stringify(paymentInfo));
-
-        // 顯示儲存成功提示
-        saveSuccess.style.display = 'block';
-        
-        // 2秒後重置按鈕和提示
-        setTimeout(() => {
-          saveSuccess.style.display = 'none';
-          savePaymentInfoBtn.disabled = false;
-          savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-save"></i> 儲存資訊';
-          
-          // 發送存儲成功的廣播，讓租客頁面實時更新（無需刷新）
-          window.dispatchEvent(new StorageEvent('storage', {
-            key: 'paymentInfo',
-            newValue: JSON.stringify(paymentInfo)
-          }));
-        }, 2000);
-
-      } catch (e) {
-        console.error('儲存繳租資訊失敗:', e);
-        alert('儲存失敗，請稍後再試！');
-        
-        // 恢復按鈕狀態
-        savePaymentInfoBtn.disabled = false;
-        savePaymentInfoBtn.innerHTML = '<i class="fa-solid fa-save"></i> 儲存資訊';
-      }
-    });
-
-    // 即時清除錯誤提示（用戶輸入時）
-    [bankNameInput, branchNameInput, accountNameInput, accountNumberInput].forEach(input => {
-      input.addEventListener('input', () => {
-        input.classList.remove('error');
-        document.getElementById(`${input.id}Error`).style.display = 'none';
+      // 繳費記錄搜索
+      document.getElementById('paymentSearch').addEventListener('input', (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('#paymentTableBody tr');
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(keyword) ? '' : 'none';
+        });
       });
-    });
+    }
 
-    // ========== 核心功能：租客列表加載 ==========
+    // ========== 彈窗事件綁定 ==========
+    function bindModalEvents() {
+      // 新增相簿彈窗
+      const addAlbumModal = document.getElementById('addAlbumModal');
+      const closeAlbumModal = document.getElementById('closeAlbumModal');
+      const addAlbumBtn = document.getElementById('addAlbumBtn');
+
+      addAlbumBtn.addEventListener('click', () => {
+        currentEditingAlbumIndex = -1;
+        resetAlbumForm();
+        addAlbumModal.style.display = 'flex';
+      });
+
+      closeAlbumModal.addEventListener('click', () => {
+        addAlbumModal.style.display = 'none';
+      });
+
+      // 新增繳費記錄彈窗
+      const addPaymentModal = document.getElementById('addPaymentModal');
+      const closePaymentModal = document.getElementById('closePaymentModal');
+      const addPaymentBtn = document.getElementById('addPaymentBtn');
+
+      addPaymentBtn.addEventListener('click', () => {
+        currentEditingPaymentIndex = -1;
+        resetPaymentForm();
+        addPaymentModal.style.display = 'flex';
+      });
+
+      closePaymentModal.addEventListener('click', () => {
+        addPaymentModal.style.display = 'none';
+      });
+
+      // 點擊彈窗外關閉
+      window.addEventListener('click', (e) => {
+        if (e.target === addAlbumModal) addAlbumModal.style.display = 'none';
+        if (e.target === addPaymentModal) addPaymentModal.style.display = 'none';
+      });
+    }
+
+    // ========== 新增按鈕事件綁定 ==========
+    function bindAddButtonEvents() {
+      // 提交相簿
+      document.getElementById('submitAlbumBtn').addEventListener('click', submitAlbum);
+
+      // 提交繳費記錄
+      document.getElementById('submitPaymentBtn').addEventListener('click', submitPayment);
+    }
+
+    // ========== 全選事件綁定 ==========
+    function bindSelectAllEvents() {
+      // 租客全選
+      const selectAllTenants = document.getElementById('selectAllTenants');
+      const tableSelectAllTenants = document.getElementById('tableSelectAllTenants');
+      const batchDeleteTenantBtn = document.getElementById('batchDeleteTenantBtn');
+
+      selectAllTenants.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        tableSelectAllTenants.checked = isChecked;
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        batchDeleteTenantBtn.disabled = !isChecked;
+      });
+
+      tableSelectAllTenants.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        selectAllTenants.checked = isChecked;
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        batchDeleteTenantBtn.disabled = !isChecked;
+      });
+
+      // 繳費記錄全選
+      const selectAllPayments = document.getElementById('selectAllPayments');
+      const tableSelectAllPayments = document.getElementById('tableSelectAllPayments');
+      const batchDeletePaymentBtn = document.getElementById('batchDeletePaymentBtn');
+
+      selectAllPayments.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        tableSelectAllPayments.checked = isChecked;
+        document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        batchDeletePaymentBtn.disabled = !isChecked;
+      });
+
+      tableSelectAllPayments.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        selectAllPayments.checked = isChecked;
+        document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+        batchDeletePaymentBtn.disabled = !isChecked;
+      });
+
+      // 相簿全選
+      const tableSelectAllAlbums = document.getElementById('tableSelectAllAlbums');
+      tableSelectAllAlbums.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        document.querySelectorAll('.album-checkbox').forEach(checkbox => {
+          checkbox.checked = isChecked;
+        });
+      });
+
+      // 綁定批量刪除事件
+      batchDeleteTenantBtn.addEventListener('click', batchDeleteTenants);
+      batchDeletePaymentBtn.addEventListener('click', batchDeletePayments);
+    }
+
+    // ========== 租客管理 ==========
     function loadTenantList() {
-      // 兼容 LocalStorage 讀取錯誤
       let tenants = [];
       try {
         const storedTenants = localStorage.getItem('gdcTenants');
         if (storedTenants) {
           tenants = JSON.parse(storedTenants);
-          // 確保是數組
           if (!Array.isArray(tenants)) tenants = [];
         }
       } catch (e) {
@@ -713,410 +1003,776 @@
       const tenantTable = document.getElementById('tenantTable');
       const tenantTableBody = document.getElementById('tenantTableBody');
       const totalTenants = document.getElementById('totalTenants');
-
-      // 更新統計數字
+            // 更新統計數據
       totalTenants.textContent = tenants.length;
 
-      // 判斷是否有租客數據
+      // 渲染表格
       if (tenants.length === 0) {
         emptyText.style.display = 'block';
         tenantTable.style.display = 'none';
-        // 新增：清空全選框
-        document.getElementById('selectAllTenants').checked = false;
-        document.getElementById('tableSelectAll').checked = false;
-        // 新增：禁用批量刪除按鈕
-        document.getElementById('batchDeleteBtn').disabled = true;
-        return;
-      }
-
-      // 顯示租客列表
-      emptyText.style.display = 'none';
-      tenantTable.style.display = 'table';
-      tenantTableBody.innerHTML = '';
-
-      // 渲染租客列表
-      tenants.forEach((tenant, index) => {
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-index', index); // 新增：標記索引
-        // 防呆：確保屬性存在
-        const name = tenant.name || '未填寫';
-        const phone = tenant.phone || '未填寫';
-        const email = tenant.email || '未填寫';
-        const room = tenant.room || '未填寫';
-
-        tr.innerHTML = `
-          <td><input type="checkbox" class="tenant-checkbox" data-index="${index}"></td> <!-- 新增：單選框 -->
-          <td>${name}</td>
-          <td>${phone}</td>
-          <td>${email}</td>
-          <td>${room}</td>
-          <td><a href="https://mega.nz/fm/Dt4TAKJB#${room}" target="_blank" class="mega-link">查看${room}文件夾</a></td>
-          <td>
-            <button class="btn-view-images" onclick="viewTenantImages('${room}')">查看圖片</button>
-            <button class="btn-delete" onclick="deleteTenant(${index})">刪除</button> <!-- 新增：單條刪除按鈕 -->
-          </td>
-        `;
-        tenantTableBody.appendChild(tr);
-      });
-
-      // 新增：重新綁定全選事件
-      bindSelectAllEvents();
-      // 新增：初始化批量刪除按鈕狀態
-      updateBatchDeleteBtnStatus();
-    }
-
-    // ========== 新增功能：綁定全選事件 ==========
-    function bindSelectAllEvents() {
-      // 頂部全選框
-      const selectAllTenants = document.getElementById('selectAllTenants');
-      // 表格內全選框
-      const tableSelectAll = document.getElementById('tableSelectAll');
-      // 批量刪除按鈕
-      const batchDeleteBtn = document.getElementById('batchDeleteBtn');
-
-      // 頂部全選框變更事件
-      selectAllTenants.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        // 同步表格內全選框
-        tableSelectAll.checked = isChecked;
-        // 同步所有單選框
-        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
-          checkbox.checked = isChecked;
-        });
-        // 更新批量刪除按鈕狀態
-        batchDeleteBtn.disabled = !isChecked;
-      });
-
-      // 表格內全選框變更事件
-      tableSelectAll.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        // 同步頂部全選框
-        selectAllTenants.checked = isChecked;
-        // 同步所有單選框
-        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
-          checkbox.checked = isChecked;
-        });
-        // 更新批量刪除按鈕狀態
-        batchDeleteBtn.disabled = !isChecked;
-      });
-
-      // 單選框變更事件
-      document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', updateBatchDeleteBtnStatus);
-      });
-
-      // 綁定批量刪除按鈕點擊事件
-      batchDeleteBtn.addEventListener('click', batchDeleteTenants);
-    }
-
-    // ========== 新增功能：更新批量刪除按鈕狀態 ==========
-    function updateBatchDeleteBtnStatus() {
-      const checkboxes = document.querySelectorAll('.tenant-checkbox:checked');
-      const batchDeleteBtn = document.getElementById('batchDeleteBtn');
-      // 有選中項則啟用按鈕，否則禁用
-      batchDeleteBtn.disabled = checkboxes.length === 0;
-      
-      // 同步全選框狀態
-      const allCheckboxes = document.querySelectorAll('.tenant-checkbox');
-      const selectAllTenants = document.getElementById('selectAllTenants');
-      const tableSelectAll = document.getElementById('tableSelectAll');
-      
-      if (allCheckboxes.length === 0) {
-        selectAllTenants.checked = false;
-        tableSelectAll.checked = false;
-      } else if (checkboxes.length === allCheckboxes.length) {
-        selectAllTenants.checked = true;
-        tableSelectAll.checked = true;
       } else {
-        selectAllTenants.checked = false;
-        tableSelectAll.checked = false;
+        emptyText.style.display = 'none';
+        tenantTable.style.display = 'table';
+        tenantTableBody.innerHTML = '';
+
+        tenants.forEach((tenant, index) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="checkbox" class="tenant-checkbox" data-index="${index}"></td>
+            <td>${tenant.name || '-'}</td>
+            <td>${tenant.phone || '-'}</td>
+            <td>${tenant.email || '-'}</td>
+            <td>${tenant.room || '-'}</td>
+            <td>${tenant.megaLink ? `<a href="${tenant.megaLink}" target="_blank" class="mega-link">查看</a>` : '-'}</td>
+            <td>
+              <button class="btn-delete tenant-delete-btn" data-index="${index}">
+                <i class="fa-solid fa-trash"></i> 刪除
+              </button>
+            </td>
+          `;
+          tenantTableBody.appendChild(tr);
+        });
+
+        // 綁定單個刪除事件
+        document.querySelectorAll('.tenant-delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.tenant-delete-btn').dataset.index);
+            deleteTenant(index);
+          });
+        });
+
+        // 監聽租客勾選狀態
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', updateTenantBatchButton);
+        });
       }
     }
 
-    // ========== 新增功能：單條刪除租客 ==========
+    // 更新租客批量刪除按鈕狀態
+    function updateTenantBatchButton() {
+      const checkedCount = document.querySelectorAll('.tenant-checkbox:checked').length;
+      document.getElementById('batchDeleteTenantBtn').disabled = checkedCount === 0;
+    }
+
+    // 刪除單個租客
     function deleteTenant(index) {
-      if (!confirm('確定要刪除該租客資訊嗎？刪除後無法復原！')) {
-        return;
-      }
+      if (!confirm('確定要刪除此租客嗎？此操作不可復原！')) return;
 
       try {
         let tenants = JSON.parse(localStorage.getItem('gdcTenants')) || [];
-        // 刪除對應索引的租客
         tenants.splice(index, 1);
-        // 保存更新後的數據
         localStorage.setItem('gdcTenants', JSON.stringify(tenants));
-        
-        // 同步刪除該租客的圖片和繳費記錄（可選，根據需求調整）
-        deleteTenantRelatedData(tenants, index);
-        
-        // 重新加載租客列表和統計數據
         loadTenantList();
         loadStatsData();
-        
-        alert('租客資訊刪除成功！');
+        alert('刪除成功！');
       } catch (e) {
         console.error('刪除租客失敗:', e);
-        alert('刪除租客資訊失敗，請稍後再試！');
+        alert('刪除失敗，請稍後再試！');
       }
     }
 
-    // ========== 新增功能：批量刪除租客 ==========
+    // 批量刪除租客
     function batchDeleteTenants() {
       const checkedCheckboxes = document.querySelectorAll('.tenant-checkbox:checked');
-      if (checkedCheckboxes.length === 0) {
-        alert('請先選擇要刪除的租客！');
-        return;
-      }
+      if (checkedCheckboxes.length === 0) return;
 
-      if (!confirm(`確定要刪除選中的${checkedCheckboxes.length}位租客資訊嗎？刪除後無法復原！`)) {
-        return;
-      }
+      if (!confirm(`確定要刪除選中的 ${checkedCheckboxes.length} 個租客嗎？此操作不可復原！`)) return;
 
       try {
         let tenants = JSON.parse(localStorage.getItem('gdcTenants')) || [];
-        // 獲取選中的索引（倒序刪除，避免索引混亂）
-        const selectedIndexes = Array.from(checkedCheckboxes)
-          .map(checkbox => parseInt(checkbox.getAttribute('data-index')))
+        // 獲取要刪除的索引並降序排列（避免刪除時索引偏移）
+        const indexes = Array.from(checkedCheckboxes)
+          .map(checkbox => parseInt(checkbox.dataset.index))
           .sort((a, b) => b - a);
-        
-        // 刪除選中的租客
-        selectedIndexes.forEach(index => {
-          tenants.splice(index, 1);
+
+        // 刪除對應租客
+        indexes.forEach(index => {
+          if (index >= 0 && index < tenants.length) {
+            tenants.splice(index, 1);
+          }
         });
-        
-        // 保存更新後的數據
+
         localStorage.setItem('gdcTenants', JSON.stringify(tenants));
-        
-        // 同步刪除選中租客的相關數據
-        selectedIndexes.forEach(index => {
-          deleteTenantRelatedData(tenants, index);
-        });
-        
-        // 重新加載租客列表和統計數據
         loadTenantList();
         loadStatsData();
-        
-        alert(`成功刪除${selectedIndexes.length}位租客資訊！`);
+        alert(`成功刪除 ${indexes.length} 個租客！`);
       } catch (e) {
         console.error('批量刪除租客失敗:', e);
-        alert('批量刪除租客資訊失敗，請稍後再試！');
+        alert('批量刪除失敗，請稍後再試！');
       }
     }
 
-    // ========== 新增功能：刪除租客相關數據（圖片/繳費記錄） ==========
-    function deleteTenantRelatedData(tenants, index) {
-      try {
-        // 獲取要刪除的租客房號
-        const tenant = tenants[index];
-        if (!tenant || !tenant.room) return;
-        const room = tenant.room;
-        
-        // 刪除該房號的圖片
-        let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        if (roomImages[room]) {
-          delete roomImages[room];
-          localStorage.setItem('roomImages', JSON.stringify(roomImages));
-        }
-        
-        // 刪除該房號的繳費記錄
-        let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
-        paymentRecords = paymentRecords.filter(record => record.room !== room);
-        localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
-      } catch (e) {
-        console.error('刪除租客相關數據失敗:', e);
-      }
-    }
-
-    // ========== 新增功能：加載統計數據 ==========
-    function loadStatsData() {
-      // 計算總租客數
-      let tenants = [];
-      try {
-        const storedTenants = localStorage.getItem('gdcTenants');
-        if (storedTenants) {
-          tenants = JSON.parse(storedTenants);
-          if (!Array.isArray(tenants)) tenants = [];
-        }
-      } catch (e) {
-        tenants = [];
-      }
-      document.getElementById('totalTenants').textContent = tenants.length;
-
-      // 計算總圖片數
-      let totalImages = 0;
-      try {
-        const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        for (const room in roomImages) {
-          totalImages += roomImages[room].length;
-        }
-      } catch (e) {
-        totalImages = 0;
-      }
-      document.getElementById('totalImages').textContent = totalImages;
-
-      // 計算總繳費記錄和總金額
-      let totalPayments = 0;
-      let totalAmountSum = 0;
-      try {
-        const paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
-        totalPayments = paymentRecords.length;
-        paymentRecords.forEach(record => {
-          totalAmountSum += parseFloat(record.totalAmount) || 0;
-        });
-      } catch (e) {
-        totalPayments = 0;
-        totalAmountSum = 0;
-      }
-      document.getElementById('totalPayments').textContent = totalPayments;
-      document.getElementById('totalAmountSum').textContent = `$${totalAmountSum.toFixed(0)}`;
-    }
-
-    // ========== 新增功能：加載相簿數據 ==========
+    // ========== 相簿管理 ==========
     function loadAlbumData() {
-      let roomImages = {};
+      let albums = [];
       try {
-        roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+        const storedAlbums = localStorage.getItem('gdcAlbums');
+        if (storedAlbums) {
+          albums = JSON.parse(storedAlbums);
+          if (!Array.isArray(albums)) albums = [];
+        }
       } catch (e) {
-        roomImages = {};
+        console.error('讀取相簿列表失敗:', e);
+        albums = [];
       }
 
-      const emptyAlbumText = document.getElementById('emptyAlbumText');
-      const albumContent = document.getElementById('albumContent');
+      const emptyText = document.getElementById('emptyAlbumText');
+      const albumTable = document.getElementById('albumTable');
+      const albumTableBody = document.getElementById('albumTableBody');
+      const totalAlbums = document.getElementById('totalAlbums');
 
-      // 判斷是否有圖片數據
-      const hasImages = Object.keys(roomImages).some(room => roomImages[room].length > 0);
-      if (!hasImages) {
-        emptyAlbumText.style.display = 'block';
-        albumContent.style.display = 'none';
-        return;
-      }
+      // 更新統計數據
+      totalAlbums.textContent = albums.length;
 
-      emptyAlbumText.style.display = 'none';
-      albumContent.style.display = 'block';
-      albumContent.innerHTML = '';
+      // 渲染表格
+      if (albums.length === 0) {
+        emptyText.style.display = 'block';
+        albumTable.style.display = 'none';
+      } else {
+        emptyText.style.display = 'none';
+        albumTable.style.display = 'table';
+        albumTableBody.innerHTML = '';
 
-      // 渲染每個房間的圖片
-      for (const room in roomImages) {
-        const images = roomImages[room];
-        if (images.length === 0) continue;
+        albums.forEach((album, index) => {
+          const imageCount = album.images && Array.isArray(album.images) ? album.images.length : 0;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="checkbox" class="album-checkbox" data-index="${index}"></td>
+            <td>${album.room || '-'}</td>
+            <td>${album.name || '-'}</td>
+            <td>${imageCount}</td>
+            <td>${album.createTime || '-'}</td>
+            <td>${album.megaLink ? `<a href="${album.megaLink}" target="_blank" class="mega-link">查看</a>` : '-'}</td>
+            <td>
+              <button class="btn-view album-view-btn" data-index="${index}">
+                <i class="fa-solid fa-eye"></i> 查看
+              </button>
+              <button class="btn-edit album-edit-btn" data-index="${index}">
+                <i class="fa-solid fa-pen"></i> 編輯
+              </button>
+              <button class="btn-delete album-delete-btn" data-index="${index}">
+                <i class="fa-solid fa-trash"></i> 刪除
+              </button>
+            </td>
+          `;
+          albumTableBody.appendChild(tr);
+        });
 
-        const roomDiv = document.createElement('div');
-        roomDiv.setAttribute('data-room', room);
-        roomDiv.style.marginBottom = '30px';
-        roomDiv.innerHTML = `
-          <h3 style="color: #1f4e8c; margin-bottom: 15px;">房間 ${room} (${images.length} 張圖片)</h3>
-          <div class="images-grid">
-            ${images.map(img => `
-              <div class="image-item">
-                <img src="${img.url}" alt="${img.name || `房號${room}圖片`}">
-              </div>
-            `).join('')}
-          </div>
-          <div style="margin-top: 10px;">
-            <a href="https://mega.nz/fm/Dt4TAKJB#${room}" target="_blank" class="mega-link">
-              <i class="fa-solid fa-external-link"></i> 前往MEGA查看${room}文件夾
-            </a>
-          </div>
-        `;
-        albumContent.appendChild(roomDiv);
+        // 綁定相簿按鈕事件
+        document.querySelectorAll('.album-view-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.album-view-btn').dataset.index);
+            viewAlbum(index);
+          });
+        });
+
+        document.querySelectorAll('.album-edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.album-edit-btn').dataset.index);
+            editAlbum(index);
+          });
+        });
+
+        document.querySelectorAll('.album-delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.album-delete-btn').dataset.index);
+            deleteAlbum(index);
+          });
+        });
       }
     }
 
-    // ========== 新增功能：加載繳費記錄 ==========
-    function loadPaymentRecords() {
-      let paymentRecords = [];
+    // 重置相簿表單
+    function resetAlbumForm() {
+      const albumRoom = document.getElementById('albumRoom');
+      const albumName = document.getElementById('albumName');
+      const albumImageUrls = document.getElementById('albumImageUrls');
+      const albumRoomError = document.getElementById('albumRoomError');
+      const albumNameError = document.getElementById('albumNameError');
+      const albumSaveSuccess = document.getElementById('albumSaveSuccess');
+
+      albumRoom.value = '';
+      albumName.value = '';
+      albumImageUrls.value = '';
+      albumRoom.classList.remove('error');
+      albumName.classList.remove('error');
+      albumRoomError.style.display = 'none';
+      albumNameError.style.display = 'none';
+      albumSaveSuccess.style.display = 'none';
+    }
+
+    // 提交相簿（新增/編輯）
+    function submitAlbum() {
+      const albumRoom = document.getElementById('albumRoom');
+      const albumName = document.getElementById('albumName');
+      const albumImageUrls = document.getElementById('albumImageUrls');
+      const albumRoomError = document.getElementById('albumRoomError');
+      const albumNameError = document.getElementById('albumNameError');
+      const albumSaveSuccess = document.getElementById('albumSaveSuccess');
+      const submitAlbumBtn = document.getElementById('submitAlbumBtn');
+
+      // 驗證
+      let isValid = true;
+      albumRoom.classList.remove('error');
+      albumName.classList.remove('error');
+      albumRoomError.style.display = 'none';
+      albumNameError.style.display = 'none';
+
+      if (!albumRoom.value.trim()) {
+        albumRoom.classList.add('error');
+        albumRoomError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!albumName.value.trim()) {
+        albumName.classList.add('error');
+        albumNameError.style.display = 'block';
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      // 處理圖片URL
+      let images = [];
+      if (albumImageUrls.value.trim()) {
+        images = albumImageUrls.value.split(',').map(url => url.trim()).filter(url => url);
+      }
+
+      // 構建相簿數據
+      const albumData = {
+        room: albumRoom.value.trim(),
+        name: albumName.value.trim(),
+        images: images,
+        createTime: currentEditingAlbumIndex === -1 
+          ? new Date().toLocaleString('zh-TW') 
+          : getAlbumByIdx(currentEditingAlbumIndex).createTime,
+        megaLink: getAlbumByIdx(currentEditingAlbumIndex)?.megaLink || ''
+      };
+
+      submitAlbumBtn.disabled = true;
+      submitAlbumBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
+
       try {
-        paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+        let albums = JSON.parse(localStorage.getItem('gdcAlbums')) || [];
+        if (!Array.isArray(albums)) albums = [];
+
+        if (currentEditingAlbumIndex === -1) {
+          // 新增
+          albums.push(albumData);
+        } else {
+          // 編輯
+          albums[currentEditingAlbumIndex] = albumData;
+        }
+
+        localStorage.setItem('gdcAlbums', JSON.stringify(albums));
+        albumSaveSuccess.style.display = 'block';
+
+        setTimeout(() => {
+          document.getElementById('addAlbumModal').style.display = 'none';
+          resetAlbumForm();
+          loadAlbumData();
+          loadStatsData();
+          submitAlbumBtn.disabled = false;
+          submitAlbumBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增相簿';
+          alert(currentEditingAlbumIndex === -1 ? '相簿新增成功！' : '相簿編輯成功！');
+        }, 1500);
+
       } catch (e) {
-        paymentRecords = [];
+        console.error('保存相簿失敗:', e);
+        alert('保存失敗，請稍後再試！');
+        submitAlbumBtn.disabled = false;
+        submitAlbumBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增相簿';
+      }
+    }
+
+    // 根據索引獲取相簿
+    function getAlbumByIdx(index) {
+      try {
+        const albums = JSON.parse(localStorage.getItem('gdcAlbums')) || [];
+        return albums[index] || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // 查看相簿
+    function viewAlbum(index) {
+      const album = getAlbumByIdx(index);
+      if (!album) return;
+
+      // 創建彈窗顯示圖片
+      const modal = document.createElement('div');
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+      modal.style.zIndex = '99999';
+      modal.style.display = 'flex';
+      modal.style.flexDirection = 'column';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+
+      const header = document.createElement('div');
+      header.style.color = 'white';
+      header.style.fontSize = '20px';
+      header.style.marginBottom = '20px';
+      header.style.textAlign = 'center';
+      header.innerHTML = `<strong>${album.room} - ${album.name}</strong>`;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.top = '20px';
+      closeBtn.style.right = '20px';
+      closeBtn.style.backgroundColor = 'red';
+      closeBtn.style.color = 'white';
+      closeBtn.style.border = 'none';
+      closeBtn.style.borderRadius = '50%';
+      closeBtn.style.width = '40px';
+      closeBtn.style.height = '40px';
+      closeBtn.style.fontSize = '20px';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.textContent = '×';
+
+      const imagesGrid = document.createElement('div');
+      imagesGrid.className = 'images-grid';
+      imagesGrid.style.maxWidth = '90%';
+      imagesGrid.style.maxHeight = '80%';
+      imagesGrid.style.overflowY = 'auto';
+      imagesGrid.style.padding = '20px';
+
+      // 添加圖片
+      if (album.images && album.images.length > 0) {
+        album.images.forEach(imgUrl => {
+          const imgItem = document.createElement('div');
+          imgItem.className = 'image-item';
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = album.name;
+          img.onerror = () => {
+            img.src = 'https://via.placeholder.com/150?text=圖片加載失敗';
+          };
+          imgItem.appendChild(img);
+          imagesGrid.appendChild(imgItem);
+        });
+      } else {
+        imagesGrid.innerHTML = '<div style="color:white; padding:50px;">此相簿暫無圖片</div>';
       }
 
-      const emptyPaymentText = document.getElementById('emptyPaymentText');
-      const paymentRecordTable = document.getElementById('paymentRecordTable');
-      const paymentRecordTableBody = document.getElementById('paymentRecordTableBody');
+      modal.appendChild(closeBtn);
+      modal.appendChild(header);
+      modal.appendChild(imagesGrid);
+      document.body.appendChild(modal);
 
-      // 判斷是否有繳費記錄
-      if (paymentRecords.length === 0) {
-        emptyPaymentText.style.display = 'block';
-        paymentRecordTable.style.display = 'none';
-        return;
-      }
+      // 關閉事件
+      closeBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
 
-      emptyPaymentText.style.display = 'none';
-      paymentRecordTable.style.display = 'table';
-      paymentRecordTableBody.innerHTML = '';
-
-      // 渲染繳費記錄
-      paymentRecords.forEach(record => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${record.tenantName || '未知'}</td>
-          <td>${record.room || '未知'}</td>
-          <td>${record.rentalPeriod || '未填寫'}</td>
-          <td>${record.paymentPeriod || '未填寫'}</td>
-          <td>${record.rent || 0}元</td>
-          <td>${record.electricityTotal || 0}元</td>
-          <td>${record.waterTotal || 0}元</td>
-          <td>${record.totalAmount || 0}元</td>
-          <td>${record.paymentDate || '未填寫'}</td>
-          <td>${record.paymentLast5 || '未填寫'}</td>
-          <td>${record.submitTime || '未知'}</td>
-        `;
-        paymentRecordTableBody.appendChild(tr);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          document.body.removeChild(modal);
+        }
       });
     }
 
-    // 查看租客上傳的圖片
-    window.viewTenantImages = async function(room) {
+    // 編輯相簿
+    function editAlbum(index) {
+      const album = getAlbumByIdx(index);
+      if (!album) return;
+
+      currentEditingAlbumIndex = index;
+      const albumRoom = document.getElementById('albumRoom');
+      const albumName = document.getElementById('albumName');
+      const albumImageUrls = document.getElementById('albumImageUrls');
+
+      // 填充表單
+      albumRoom.value = album.room || '';
+      albumName.value = album.name || '';
+      albumImageUrls.value = album.images ? album.images.join(',') : '';
+
+      // 打開彈窗
+      document.getElementById('addAlbumModal').style.display = 'flex';
+      document.querySelector('.modal-title').textContent = '編輯相簿';
+      document.getElementById('submitAlbumBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
+    }
+
+    // 刪除相簿
+    function deleteAlbum(index) {
+      if (!confirm('確定要刪除此相簿嗎？此操作不可復原！')) return;
+
       try {
-        // 先從本地存儲讀取
-        let roomImages = {};
-        try {
-          roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        } catch (e) {
-          roomImages = {};
-        }
-
-        const images = roomImages[room] || [];
-        if (images.length === 0) {
-          // 備選：從API加載
-          const res = await fetch(`https://guangda-city-2iqbcqblx-yuhans-projects-1e6bf955.vercel.app/api/gdc/get-room-images?room=${room}`, {
-            method: 'GET'
-          });
-          const result = await res.json();
-          
-          if (!result.success || result.data.length === 0) {
-            alert(`房號${room}無圖片或加載失敗`);
-            return;
-          }
-          
-          // 使用API返回的圖片
-          images = result.data;
-        }
-
-        // 彈窗顯示圖片
-        const imagesHtml = images.map(img => `<img src="${img.url || img}" width="150" style="margin: 5px;">`).join('');
-        const modal = document.createElement('div');
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-        modal.style.display = 'flex';
-        modal.style.flexDirection = 'column';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
-        modal.style.zIndex = '9999';
-        modal.innerHTML = `
-          <button style="background: #dc3545; color: white; border: none; padding: 10px 20px; margin-bottom: 20px; cursor: pointer;" onclick="this.parentElement.remove()">關閉</button>
-          <div style="max-width: 90%; max-height: 80%; overflow: auto;">${imagesHtml}</div>
-        `;
-        document.body.appendChild(modal);
-      } catch (error) {
-        alert('加載圖片失敗：' + error.message);
+        let albums = JSON.parse(localStorage.getItem('gdcAlbums')) || [];
+        albums.splice(index, 1);
+        localStorage.setItem('gdcAlbums', JSON.stringify(albums));
+        loadAlbumData();
+        loadStatsData();
+        alert('相簿刪除成功！');
+      } catch (e) {
+        console.error('刪除相簿失敗:', e);
+        alert('刪除失敗，請稍後再試！');
       }
     }
+
+    // ========== 繳費記錄管理 ==========
+    function loadPaymentRecords() {
+      let payments = [];
+      try {
+        const storedPayments = localStorage.getItem('gdcPayments');
+        if (storedPayments) {
+          payments = JSON.parse(storedPayments);
+          if (!Array.isArray(payments)) payments = [];
+        }
+      } catch (e) {
+        console.error('讀取繳費記錄失敗:', e);
+        payments = [];
+      }
+
+      const emptyText = document.getElementById('emptyPaymentText');
+      const paymentTable = document.getElementById('paymentTable');
+      const paymentTableBody = document.getElementById('paymentTableBody');
+      const totalPayments = document.getElementById('totalPayments');
+
+      // 更新統計數據
+      totalPayments.textContent = payments.length;
+
+      // 渲染表格
+      if (payments.length === 0) {
+        emptyText.style.display = 'block';
+        paymentTable.style.display = 'none';
+      } else {
+        emptyText.style.display = 'none';
+        paymentTable.style.display = 'table';
+        paymentTableBody.innerHTML = '';
+
+        payments.forEach((payment, index) => {
+          // 計算總金額
+          const rent = parseFloat(payment.rent) || 0;
+          const electricity = parseFloat(payment.electricity) || 0;
+          const water = parseFloat(payment.water) || 0;
+          const total = rent + electricity + water;
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="checkbox" class="payment-checkbox" data-index="${index}"></td>
+            <td>${payment.tenantName || '-'}</td>
+            <td>${payment.room || '-'}</td>
+            <td>${payment.rentalPeriod || '-'}</td>
+            <td>${payment.period || '-'}</td>
+            <td>$${rent.toLocaleString()}</td>
+            <td>$${electricity.toLocaleString()}</td>
+            <td>$${water.toLocaleString()}</td>
+            <td>$${total.toLocaleString()}</td>
+            <td>${payment.paymentDate || '-'}</td>
+            <td>${payment.last5 || '-'}</td>
+            <td>${payment.createTime || '-'}</td>
+            <td>
+              <button class="btn-edit payment-edit-btn" data-index="${index}">
+                <i class="fa-solid fa-pen"></i> 編輯
+              </button>
+              <button class="btn-delete payment-delete-btn" data-index="${index}">
+                <i class="fa-solid fa-trash"></i> 刪除
+              </button>
+            </td>
+          `;
+          paymentTableBody.appendChild(tr);
+        });
+
+        // 綁定繳費記錄按鈕事件
+        document.querySelectorAll('.payment-edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.payment-edit-btn').dataset.index);
+            editPayment(index);
+          });
+        });
+
+        document.querySelectorAll('.payment-delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.closest('.payment-delete-btn').dataset.index);
+            deletePayment(index);
+          });
+        });
+
+        // 監聽繳費記錄勾選狀態
+        document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+          checkbox.addEventListener('change', updatePaymentBatchButton);
+        });
+      }
+    }
+
+    // 更新繳費記錄批量刪除按鈕狀態
+    function updatePaymentBatchButton() {
+      const checkedCount = document.querySelectorAll('.payment-checkbox:checked').length;
+      document.getElementById('batchDeletePaymentBtn').disabled = checkedCount === 0;
+    }
+
+    // 重置繳費記錄表單
+    function resetPaymentForm() {
+      const formElements = [
+        'paymentTenantName', 'paymentRoom', 'paymentRentalPeriod', 
+        'paymentPeriod', 'paymentRent', 'paymentElectricity', 
+        'paymentWater', 'paymentDate', 'paymentLast5'
+      ];
+      
+      formElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+        const errorEl = document.getElementById(`${id}Error`);
+        if (errorEl) {
+          errorEl.style.display = 'none';
+          el.classList.remove('error');
+        }
+      });
+      
+      document.getElementById('paymentSaveSuccess').style.display = 'none';
+      document.querySelector('.modal-title').textContent = '新增繳費記錄';
+      document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
+    }
+
+    // 提交繳費記錄（新增/編輯）
+    function submitPayment() {
+      const paymentTenantName = document.getElementById('paymentTenantName');
+      const paymentRoom = document.getElementById('paymentRoom');
+      const paymentPeriod = document.getElementById('paymentPeriod');
+      const paymentRent = document.getElementById('paymentRent');
+      const paymentElectricity = document.getElementById('paymentElectricity');
+      const paymentWater = document.getElementById('paymentWater');
+      const paymentDate = document.getElementById('paymentDate');
+      const paymentLast5 = document.getElementById('paymentLast5');
+      const paymentRentalPeriod = document.getElementById('paymentRentalPeriod');
+      
+      const errorElements = [
+        'paymentTenantNameError', 'paymentRoomError', 
+        'paymentPeriodError', 'paymentRentError'
+      ];
+
+      // 驗證
+      let isValid = true;
+      
+      // 清除所有錯誤提示
+      [paymentTenantName, paymentRoom, paymentPeriod, paymentRent].forEach(el => {
+        el.classList.remove('error');
+        const errorEl = document.getElementById(`${el.id}Error`);
+        if (errorEl) errorEl.style.display = 'none';
+      });
+
+      if (!paymentTenantName.value.trim()) {
+        paymentTenantName.classList.add('error');
+        document.getElementById('paymentTenantNameError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!paymentRoom.value.trim()) {
+        paymentRoom.classList.add('error');
+        document.getElementById('paymentRoomError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!paymentPeriod.value.trim()) {
+        paymentPeriod.classList.add('error');
+        document.getElementById('paymentPeriodError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!paymentRent.value.trim() || isNaN(parseFloat(paymentRent.value))) {
+        paymentRent.classList.add('error');
+        document.getElementById('paymentRentError').style.display = 'block';
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      // 構建繳費記錄數據
+      const paymentData = {
+        tenantName: paymentTenantName.value.trim(),
+        room: paymentRoom.value.trim(),
+        rentalPeriod: paymentRentalPeriod.value.trim() || '',
+        period: paymentPeriod.value.trim(),
+        rent: parseFloat(paymentRent.value) || 0,
+        electricity: parseFloat(paymentElectricity.value) || 0,
+        water: parseFloat(paymentWater.value) || 0,
+        paymentDate: paymentDate.value.trim() || '',
+        last5: paymentLast5.value.trim() || '',
+        createTime: currentEditingPaymentIndex === -1 
+          ? new Date().toLocaleString('zh-TW') 
+          : getPaymentByIdx(currentEditingPaymentIndex).createTime
+      };
+
+      const submitPaymentBtn = document.getElementById('submitPaymentBtn');
+      submitPaymentBtn.disabled = true;
+      submitPaymentBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 處理中...';
+
+      try {
+        let payments = JSON.parse(localStorage.getItem('gdcPayments')) || [];
+        if (!Array.isArray(payments)) payments = [];
+
+        if (currentEditingPaymentIndex === -1) {
+          // 新增
+          payments.push(paymentData);
+        } else {
+          // 編輯
+          payments[currentEditingPaymentIndex] = paymentData;
+        }
+
+        localStorage.setItem('gdcPayments', JSON.stringify(payments));
+        document.getElementById('paymentSaveSuccess').style.display = 'block';
+
+        setTimeout(() => {
+          document.getElementById('addPaymentModal').style.display = 'none';
+          resetPaymentForm();
+          loadPaymentRecords();
+          loadStatsData();
+          submitPaymentBtn.disabled = false;
+          submitPaymentBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
+          alert(currentEditingPaymentIndex === -1 ? '繳費記錄新增成功！' : '繳費記錄編輯成功！');
+        }, 1500);
+
+      } catch (e) {
+        console.error('保存繳費記錄失敗:', e);
+        alert('保存失敗，請稍後再試！');
+        submitPaymentBtn.disabled = false;
+        submitPaymentBtn.innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
+      }
+    }
+
+    // 根據索引獲取繳費記錄
+    function getPaymentByIdx(index) {
+      try {
+        const payments = JSON.parse(localStorage.getItem('gdcPayments')) || [];
+        return payments[index] || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // 編輯繳費記錄
+    function editPayment(index) {
+      const payment = getPaymentByIdx(index);
+      if (!payment) return;
+
+      currentEditingPaymentIndex = index;
+      
+      // 填充表單
+      document.getElementById('paymentTenantName').value = payment.tenantName || '';
+      document.getElementById('paymentRoom').value = payment.room || '';
+      document.getElementById('paymentRentalPeriod').value = payment.rentalPeriod || '';
+      document.getElementById('paymentPeriod').value = payment.period || '';
+      document.getElementById('paymentRent').value = payment.rent || '';
+      document.getElementById('paymentElectricity').value = payment.electricity || '';
+      document.getElementById('paymentWater').value = payment.water || '';
+      document.getElementById('paymentDate').value = payment.paymentDate || '';
+      document.getElementById('paymentLast5').value = payment.last5 || '';
+
+      // 打開彈窗
+      document.getElementById('addPaymentModal').style.display = 'flex';
+      document.querySelector('.modal-title').textContent = '編輯繳費記錄';
+      document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
+    }
+
+    // 刪除單個繳費記錄
+    function deletePayment(index) {
+      if (!confirm('確定要刪除此繳費記錄嗎？此操作不可復原！')) return;
+
+      try {
+        let payments = JSON.parse(localStorage.getItem('gdcPayments')) || [];
+        payments.splice(index, 1);
+        localStorage.setItem('gdcPayments', JSON.stringify(payments));
+        loadPaymentRecords();
+        loadStatsData();
+        alert('繳費記錄刪除成功！');
+      } catch (e) {
+        console.error('刪除繳費記錄失敗:', e);
+        alert('刪除失敗，請稍後再試！');
+      }
+    }
+
+    // 批量刪除繳費記錄
+    function batchDeletePayments() {
+      const checkedCheckboxes = document.querySelectorAll('.payment-checkbox:checked');
+      if (checkedCheckboxes.length === 0) return;
+
+      if (!confirm(`確定要刪除選中的 ${checkedCheckboxes.length} 條繳費記錄嗎？此操作不可復原！`)) return;
+
+      try {
+        let payments = JSON.parse(localStorage.getItem('gdcPayments')) || [];
+        // 獲取要刪除的索引並降序排列
+        const indexes = Array.from(checkedCheckboxes)
+          .map(checkbox => parseInt(checkbox.dataset.index))
+          .sort((a, b) => b - a);
+
+        // 刪除對應記錄
+        indexes.forEach(index => {
+          if (index >= 0 && index < payments.length) {
+            payments.splice(index, 1);
+          }
+        });
+
+        localStorage.setItem('gdcPayments', JSON.stringify(payments));
+        loadPaymentRecords();
+        loadStatsData();
+        alert(`成功刪除 ${indexes.length} 條繳費記錄！`);
+      } catch (e) {
+        console.error('批量刪除繳費記錄失敗:', e);
+        alert('批量刪除失敗，請稍後再試！');
+      }
+    }
+
+    // ========== 統計數據 ==========
+    function loadStatsData() {
+      try {
+        // 計算總金額
+        let totalAmount = 0;
+        const payments = JSON.parse(localStorage.getItem('gdcPayments')) || [];
+        payments.forEach(payment => {
+          const rent = parseFloat(payment.rent) || 0;
+          const electricity = parseFloat(payment.electricity) || 0;
+          const water = parseFloat(payment.water) || 0;
+          totalAmount += rent + electricity + water;
+        });
+
+        // 更新總金額顯示
+        document.getElementById('totalAmountSum').textContent = `$${totalAmount.toLocaleString()}`;
+
+        // 更新其他統計（租客、相簿、繳費記錄數量已在各自加載函數中更新）
+      } catch (e) {
+        console.error('加載統計數據失敗:', e);
+        document.getElementById('totalAmountSum').textContent = '$0';
+      }
+    }
+
+    // ========== 表單即時驗證 ==========
+    // 相簿表單
+    document.getElementById('albumRoom').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('albumRoomError').style.display = 'none';
+    });
+
+    document.getElementById('albumName').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('albumNameError').style.display = 'none';
+    });
+
+    // 繳費記錄表單
+    document.getElementById('paymentTenantName').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('paymentTenantNameError').style.display = 'none';
+    });
+
+    document.getElementById('paymentRoom').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('paymentRoomError').style.display = 'none';
+    });
+
+    document.getElementById('paymentPeriod').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('paymentPeriodError').style.display = 'none';
+    });
+
+    document.getElementById('paymentRent').addEventListener('input', function() {
+      this.classList.remove('error');
+      document.getElementById('paymentRentError').style.display = 'none';
+    });
   </script>
 </body>
 </html>
