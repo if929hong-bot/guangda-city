@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>廣大城租客管理 - 用戶登入</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 基礎樣式補充（確保頁面整體美觀） */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft JhengHei', sans-serif;
+    }
+    body {
+      background-color: #f5f7fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .page-title {
+      font-size: 32px;
+      color: #1f4e8c;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .page-subtitle {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      width: 100%;
+      max-width: 450px;
+      border-radius: 10px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .card-header {
+      background-color: #1f4e8c;
+      color: white;
+      padding: 15px 20px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #eee;
+    }
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab.active {
+      background-color: #e8f0fe;
+      color: #1f4e8c;
+      font-weight: 500;
+      border-bottom: 2px solid #1f4e8c;
+    }
+    /* 管理員標籤激活時應用紫色 #7B2CBF */
+    #adminTab.active {
+      background-color: #f9f0fe;
+      color: #7B2CBF;
+      border-bottom: 2px solid #7B2CBF;
+    }
+    .form-container {
+      padding: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #1f4e8c;
+      box-shadow: 0 0 0 2px rgba(31, 78, 140, 0.1);
+    }
+    #adminTab.active ~ .form-container .form-input:focus {
+      border-color: #7B2CBF;
+      box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.1);
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #1f4e8c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-bottom: 15px;
+    }
+    .btn:hover {
+      background-color: #184078;
+    }
+    #adminTab.active ~ .form-container .btn {
+      background-color: #7B2CBF;
+    }
+    #adminTab.active ~ .form-container .btn:hover {
+      background-color: #6a25a8;
+    }
+    .link-text {
+      text-align: center;
+      font-size: 14px;
+    }
+    .link-text a {
+      color: #1f4e8c;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .link-text a:hover {
+      text-decoration: underline;
+    }
+    #adminTab.active ~ .form-container .link-text a {
+      color: #7B2CBF;
+    }
+    /* 忘記密碼鏈接樣式優化 */
+    #forgotPasswordLink {
+      margin-bottom: 10px !important;
+    }
+    #forgotPasswordLink a {
+      color: #007bff;
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="page-title">廣大城租客管理</h1>
+  <p class="page-subtitle">租客管理系統登入</p>
+
+  <div class="card">
+    <div class="card-header">用戶登入</div>
+    <div class="tabs">
+      <div class="tab active" id="tenantTab">
+        <i class="fa-solid fa-user"></i> 租客登入
+      </div>
+      <div class="tab" id="adminTab">
+        <i class="fa-solid fa-user-tie"></i> 管理員登入
+      </div>
+    </div>
+    <div class="form-container">
+      <div class="form-group">
+        <label for="phone"><i class="fa-solid fa-phone"></i> 電話號碼 *</label>
+        <input type="tel" id="phone" class="form-input" placeholder="請輸入您的電話號碼" maxlength="10">
+      </div>
+      <div class="form-group">
+        <label for="password"><i class="fa-solid fa-lock"></i> 密碼 *</label>
+        <input type="password" id="password" class="form-input" placeholder="請輸入密碼" minlength="6">
+      </div>
+      <button class="btn" id="loginBtn">登入</button>
+      <!-- 忘記密碼連結（樣式優化） -->
+      <div class="link-text" id="forgotPasswordLink">
+        <a href="forgot-password.html">忘記密碼？</a>
+      </div>
+      <div class="link-text" id="registerLink">
+        還沒有帳戶？ <a href="register.html">立即註冊</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 標籤切換效果
+    const tabs = document.querySelectorAll('.tab');
+    const tenantTab = document.getElementById('tenantTab');
+    const adminTab = document.getElementById('adminTab');
+    const registerLink = document.getElementById('registerLink');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const loginBtn = document.getElementById('loginBtn');
+    const phoneInput = document.getElementById('phone');
+    const passwordInput = document.getElementById('password');
+    
+    // 管理員帳號密碼列表
+    const adminAccounts = [
+      { phone: '0982098079', password: 'gdc0982098079' },
+      { phone: '0975521219', password: 'gdc0975521219' }
+    ];
+
+    // 標籤切換邏輯（優化顯示/隱藏邏輯）
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // 管理員頁面隱藏註冊和忘記密碼連結
+        if (tab === adminTab) {
+          registerLink.style.display = 'none';
+          forgotPasswordLink.style.display = 'none';
+          // 管理員模式下更新提示文字
+          phoneInput.placeholder = '請輸入管理員電話號碼';
+          passwordInput.placeholder = '請輸入管理員密碼';
+        } else {
+          registerLink.style.display = 'block';
+          forgotPasswordLink.style.display = 'block';
+          // 租客模式下還原提示文字
+          phoneInput.placeholder = '請輸入您的電話號碼';
+          passwordInput.placeholder = '請輸入密碼';
+        }
+      });
+    });
+
+    // 手機號輸入格式限制（僅數字）
+    phoneInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, ''); // 移除所有非數字字符
+    });
+
+    // 登入按鈕點擊事件（增強驗證 + 優化體驗）
+    loginBtn.addEventListener('click', () => {
+      const phone = phoneInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      // 驗證輸入是否為空
+      if (!phone) {
+        alert('請輸入電話號碼！');
+        phoneInput.focus();
+        return;
+      }
+      if (!password) {
+        alert('請輸入密碼！');
+        passwordInput.focus();
+        return;
+      }
+
+      // 驗證電話格式（10位數字）
+      if (!/^\d{10}$/.test(phone)) {
+        alert('電話號碼必須為10位數字！');
+        phoneInput.focus();
+        return;
+      }
+
+      // 驗證密碼長度
+      if (password.length < 6) {
+        alert('密碼長度至少6位！');
+        passwordInput.focus();
+        return;
+      }
+
+      // 判斷當前登入類型
+      if (adminTab.classList.contains('active')) {
+        // 管理員登入驗證
+        const isAdmin = adminAccounts.some(account => 
+          account.phone === phone && account.password === password
+        );
+        
+        if (isAdmin) {
+          // 存儲管理員登入狀態
+          localStorage.setItem('isAdminLoggedIn', 'true');
+          alert('管理員登入成功！');
+          window.location.href = 'admin.html'; // 跳轉管理員後台
+        } else {
+          alert('管理員帳號或密碼錯誤！');
+          passwordInput.value = ''; // 清空密碼輸入框
+          passwordInput.focus();
+        }
+      } else {
+        // 租客登入（增強數據驗證 + 錯誤處理）
+        let tenants = [];
+        const storedTenants = localStorage.getItem('gdcTenants');
+        
+        try {
+          tenants = storedTenants ? JSON.parse(storedTenants) : [];
+          if (!Array.isArray(tenants)) {
+            tenants = [];
+          }
+        } catch (e) {
+          console.error('解析租客數據失敗：', e);
+          tenants = [];
+        }
+
+        const tenant = tenants.find(t => t.phone === phone && t.password === password);
+        
+        if (tenant) {
+          // 存儲當前登錄租客信息（供tenant.html使用）
+          sessionStorage.setItem('currentTenant', JSON.stringify(tenant));
+          localStorage.setItem('currentTenant', JSON.stringify(tenant));
+          // 清除管理員登入狀態
+          localStorage.removeItem('isAdminLoggedIn');
+          alert('租客登入成功！');
+          window.location.href = 'tenant.html'; // 跳轉租客個人頁面
+        } else {
+          alert('租客電話或密碼錯誤！');
+          passwordInput.value = ''; // 清空密碼輸入框
+          passwordInput.focus();
+        }
+      }
+    });
+
+    // 支持Enter鍵登入
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        loginBtn.click();
+      }
+    });
+
+    // 頁面加載時自動聚焦到手機號輸入框
+    window.addEventListener('load', () => {
+      phoneInput.focus();
+    });
+  </script>
+</body>
+</html>
