@@ -126,18 +126,6 @@
     .btn-green:hover {
       background-color: #218838;
     }
-    .btn-blue {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .btn-blue:hover {
-      background-color: #0069d9;
-    }
     .empty-state {
       text-align: center;
       padding: 40px 0;
@@ -153,9 +141,6 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
-    }
-    .empty-btn.blue {
-      background-color: #007bff;
     }
     /* 銀行資訊樣式 */
     .bank-info-grid {
@@ -187,23 +172,6 @@
       padding: 20px 0;
       text-align: center;
       grid-column: 1 / -1;
-    }
-    /* 圖片展示樣式 */
-    .images-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .image-item {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .image-item img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
     }
     /* 彈窗樣式（核心） */
     .modal-overlay {
@@ -304,24 +272,6 @@
       cursor: pointer;
       font-size: 14px;
     }
-    /* 上傳圖片彈窗 */
-    .upload-modal .modal-form {
-      grid-template-columns: 1fr;
-    }
-    .file-input-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .file-input-btn {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
     /* 加載動畫 */
     .loading {
       display: inline-block;
@@ -363,11 +313,6 @@
       <div class="value" id="cardRoom" style="background-color: #007bff; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px;">101</div>
       <div class="desc">房間號碼</div>
     </div>
-    <div class="profile-card">
-      <div class="label">相簿圖片</div>
-      <div class="value" id="cardImageCount">0</div>
-      <div class="desc">已上傳圖片數量</div>
-    </div>
   </div>
 
   <!-- 繳租銀行資訊 -->
@@ -393,19 +338,6 @@
     <div id="paymentList" style="display: none;"></div>
   </div>
 
-  <!-- 我的相簿 -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title">我的相簿</div>
-      <button class="btn-blue" id="openUploadModal">上傳圖片</button>
-    </div>
-    <div class="empty-state" id="imagesEmptyState">
-      您還沒有上傳任何圖片
-      <button class="empty-btn blue" id="openUploadModal2">開始上傳</button>
-    </div>
-    <div class="images-grid" id="imagesGrid" style="display: none;"></div>
-  </div>
-
   <!-- 新增繳費彈窗 -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal" id="paymentModalContent">
@@ -415,16 +347,18 @@
       </div>
       <div class="modal-body">
         <form class="modal-form" id="paymentForm">
+          <!-- 自動帶入註冊時的租約期間 -->
           <div class="modal-form-group">
             <label for="rentalPeriod">租約期間 *</label>
-            <input type="text" id="rentalPeriod" class="modal-form-input" placeholder="例：2024/01 - 2024/12">
+            <input type="text" id="rentalPeriod" class="modal-form-input" readonly>
           </div>
           <div class="modal-form-group">
             <label for="paymentPeriod">繳費區間 *</label>
-            <input type="text" id="paymentPeriod" class="modal-form-input" placeholder="例：2024/01/01 - 2024/01/31">
+            <input type="date" id="paymentPeriodStart" class="modal-form-input" placeholder="開始日期">
+            <input type="date" id="paymentPeriodEnd" class="modal-form-input" placeholder="結束日期" style="margin-top:5px;">
           </div>
           <div class="modal-form-group">
-            <label for="rent">房租</label>
+            <label for="rent">房租（元）</label>
             <input type="number" id="rent" class="modal-form-input" placeholder="請輸入房租" oninput="calculateTotal()">
           </div>
           <div class="modal-form-group">
@@ -463,12 +397,12 @@
             <input type="number" id="waterPeople" class="modal-form-input" placeholder="請輸入人數" oninput="calculateTotal()">
           </div>
           <div class="modal-form-group">
-            <label for="waterShare">水費備註</label>
-            <input type="text" id="waterShare" class="modal-form-input" placeholder="例：3人共450元">
-          </div>
-          <div class="modal-form-group">
             <label for="waterTotal">總水費（元）</label>
             <input type="number" id="waterTotal" class="modal-form-input" placeholder="請輸入總水費" oninput="calculateTotal()">
+          </div>
+          <div class="modal-form-group">
+            <label for="waterShare">水費分攤金額（自動計算）</label>
+            <input type="text" id="waterShare" class="modal-form-input" placeholder="自動計算" readonly>
           </div>
           <div class="modal-form-group">
             <label for="rentMonth">第幾個月房租</label>
@@ -495,38 +429,11 @@
     </div>
   </div>
 
-  <!-- 上傳圖片彈窗 -->
-  <div class="modal-overlay" id="uploadModal">
-    <div class="modal upload-modal" id="uploadModalContent">
-      <div class="modal-header" id="uploadModalHeader">
-        <div class="modal-title">上傳圖片</div>
-        <button class="modal-close" id="closeUploadModal">×</button>
-      </div>
-      <div class="modal-body">
-        <form class="modal-form">
-          <div class="modal-form-group">
-            <label>選擇圖片</label>
-            <div class="file-input-container">
-              <button type="button" class="file-input-btn" id="selectFileBtn">選擇檔案</button>
-              <span id="fileSelectedText">未選擇任何檔案</span>
-              <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
-            </div>
-            <div class="modal-form-note">支援JPG、PNG格式，最大5MB</div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="modal-btn-cancel" id="cancelUploadModal">取消</button>
-        <button class="modal-btn-confirm" id="confirmUploadBtn">上傳</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // 後端域名配置
     const API_DOMAIN = 'https://guangda-city-backend.zeabur.app';
 
-    // 1. 電費/總金額計算
+    // 1. 電費/水費/總金額計算
     function calculateElectricity() {
       const last = parseFloat(document.getElementById('lastElectricity').value) || 0;
       const current = parseFloat(document.getElementById('currentElectricity').value) || 0;
@@ -541,26 +448,34 @@
       const rent = parseFloat(document.getElementById('rent').value) || 0;
       const elecTotal = parseFloat(document.getElementById('electricityTotal').value) || 0;
       const waterTotal = parseFloat(document.getElementById('waterTotal').value) || 0;
-      document.getElementById('totalAmount').value = (rent + elecTotal + waterTotal).toFixed(2);
+      const waterPeople = parseInt(document.getElementById('waterPeople').value) || 1;
+      // 水費分攤
+      const waterShare = (waterTotal / waterPeople).toFixed(2);
+      document.getElementById('waterShare').value = waterShare;
+      // 總金額
+      document.getElementById('totalAmount').value = (rent + elecTotal + parseFloat(waterShare)).toFixed(2);
     }
 
     // 2. 彈窗控制 + 拖拽功能
     const paymentModal = document.getElementById('paymentModal');
-    const uploadModal = document.getElementById('uploadModal');
     // 打開/關閉彈窗
-    document.getElementById('openPaymentModal').addEventListener('click', () => paymentModal.style.display = 'block');
-    document.getElementById('openPaymentModal2').addEventListener('click', () => paymentModal.style.display = 'block');
-    document.getElementById('openUploadModal').addEventListener('click', () => uploadModal.style.display = 'block');
-    document.getElementById('openUploadModal2').addEventListener('click', () => uploadModal.style.display = 'block');
+    document.getElementById('openPaymentModal').addEventListener('click', () => {
+      // 打開彈窗前自動帶入註冊的租約期間
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      document.getElementById('rentalPeriod').value = currentTenant.contractDate || '未設定租約期間';
+      paymentModal.style.display = 'block';
+    });
+    document.getElementById('openPaymentModal2').addEventListener('click', () => {
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      document.getElementById('rentalPeriod').value = currentTenant.contractDate || '未設定租約期間';
+      paymentModal.style.display = 'block';
+    });
     // 關閉彈窗
     document.getElementById('closePaymentModal').addEventListener('click', () => paymentModal.style.display = 'none');
     document.getElementById('cancelPaymentModal').addEventListener('click', () => paymentModal.style.display = 'none');
-    document.getElementById('closeUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
-    document.getElementById('cancelUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
     // 點擊外層關閉
     window.addEventListener('click', (e) => {
       if (e.target === paymentModal) paymentModal.style.display = 'none';
-      if (e.target === uploadModal) uploadModal.style.display = 'none';
     });
     // 拖拽功能
     function initDrag(header, modal) {
@@ -583,7 +498,6 @@
       document.addEventListener('mouseup', () => isDrag = false);
     }
     initDrag(document.getElementById('paymentModalHeader'), document.getElementById('paymentModalContent'));
-    initDrag(document.getElementById('uploadModalHeader'), document.getElementById('uploadModalContent'));
 
     // 3. 銀行資訊同步（從admin設定讀取）
     function loadBankInfo() {
@@ -616,11 +530,13 @@
     // 4. 繳費記錄上傳（同步到管理員後台）
     document.getElementById('submitPayment').addEventListener('click', () => {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      // 組合繳費區間
+      const paymentPeriod = `${document.getElementById('paymentPeriodStart').value} - ${document.getElementById('paymentPeriodEnd').value}`;
       const paymentData = {
         tenantName: currentTenant.name,
         room: currentTenant.room,
         rentalPeriod: document.getElementById('rentalPeriod').value,
-        paymentPeriod: document.getElementById('paymentPeriod').value,
+        paymentPeriod: paymentPeriod,
         rent: document.getElementById('rent').value,
         totalAmount: document.getElementById('totalAmount').value,
         lastElectricity: document.getElementById('lastElectricity').value,
@@ -665,115 +581,6 @@
           <div style="font-weight: bold; color: #1f4e8c;">${item.paymentPeriod}</div>
           <div style="margin-top: 5px;">總金額：${item.totalAmount}元</div>
           <div style="font-size: 12px; color: #999; margin-top: 5px;">新增時間：${item.submitTime}</div>
-        </div>
-      `).join('');
-    }
-
-    // 5. 圖片上傳到MEGA（調用後端接口）
-    async function uploadImageToMega(room, file) {
-      try {
-        const formData = new FormData();
-        formData.append('room', room);
-        formData.append('fileName', file.name);
-        formData.append('image', file);
-
-        // 顯示加載狀態
-        const uploadBtn = document.getElementById('confirmUploadBtn');
-        const originalText = uploadBtn.innerHTML;
-        uploadBtn.innerHTML = '<span class="loading"></span>上傳中...';
-        uploadBtn.disabled = true;
-
-        const response = await fetch(`${API_DOMAIN}/api/upload-to-mega`, {
-          method: 'POST',
-          body: formData
-        });
-
-        const result = await response.json();
-        
-        // 恢復按鈕狀態
-        uploadBtn.innerHTML = originalText;
-        uploadBtn.disabled = false;
-
-        if (result.success) {
-          return result.data;
-        } else {
-          alert('上傳失敗：' + result.msg);
-          return null;
-        }
-      } catch (err) {
-        console.error('MEGA上傳錯誤:', err);
-        alert('上傳失敗，請稍後再試');
-        return null;
-      }
-    }
-
-    // 圖片選擇與上傳事件
-    document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
-    document.getElementById('fileInput').addEventListener('change', (e) => {
-      const files = e.target.files;
-      document.getElementById('fileSelectedText').textContent = files.length === 0 ? '未選擇任何檔案' : 
-        files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
-    });
-
-    // 確認上傳按鈕事件
-    document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
-      const files = document.getElementById('fileInput').files;
-      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
-      if (files.length === 0) {
-        alert('請選擇圖片！');
-        return;
-      }
-
-      // 批量上傳圖片到MEGA
-      const uploadResults = [];
-      for (let i = 0; i < files.length; i++) {
-        const result = await uploadImageToMega(currentTenant.room, files[i]);
-        if (result) uploadResults.push(result);
-      }
-
-      if (uploadResults.length > 0) {
-        // 同時保存到本地存儲（兼容管理端顯示）
-        const imageUrls = [];
-        for (let i = 0; i < files.length; i++) {
-          const reader = new FileReader();
-          await new Promise(resolve => {
-            reader.onload = (e) => {
-              imageUrls.push({ url: e.target.result, name: files[i].name });
-              resolve();
-            };
-            reader.readAsDataURL(files[i]);
-          });
-        }
-
-        let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        if (!roomImages[currentTenant.room]) roomImages[currentTenant.room] = [];
-        roomImages[currentTenant.room] = [...roomImages[currentTenant.room], ...imageUrls];
-        localStorage.setItem('roomImages', JSON.stringify(roomImages));
-
-        // 刷新相簿
-        loadRoomImages(currentTenant.room);
-        uploadModal.style.display = 'none';
-        alert(`成功上傳${uploadResults.length}張圖片到MEGA！`);
-      }
-    });
-
-    // 加載房間圖片
-    function loadRoomImages(room) {
-      const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-      const images = roomImages[room] || [];
-      const grid = document.getElementById('imagesGrid');
-      const empty = document.getElementById('imagesEmptyState');
-      document.getElementById('cardImageCount').textContent = images.length;
-      if (images.length === 0) {
-        empty.style.display = 'block';
-        grid.style.display = 'none';
-        return;
-      }
-      empty.style.display = 'none';
-      grid.style.display = 'grid';
-      grid.innerHTML = images.map(img => `
-        <div class="image-item">
-          <img src="${img.url}" alt="${img.name}">
         </div>
       `).join('');
     }
@@ -830,7 +637,6 @@
       // 加載數據
       loadBankInfo();
       renderPaymentList();
-      loadRoomImages(currentTenant.room);
     }
 
     // 登出功能
