@@ -1,7 +1,8 @@
 require('dotenv').config(); // Zeabur会自动忽略，本地开发生效
 const express = require('express');
 const cors = require('cors');
-const mega = require('mega');
+// 关键修复1：替换mega为megajs，适配正确的模块名
+const { Mega } = require('megajs');
 const sgMail = require('@sendgrid/mail');
 const multer = require('multer');
 const { Buffer } = require('buffer');
@@ -24,31 +25,42 @@ const MEGA_EMAIL = process.env.MEGA_EMAIL;
 const MEGA_PASSWORD = process.env.MEGA_PASSWORD;
 const MEGA_ROOT_FOLDER = process.env.MEGA_ROOT_FOLDER || 'guangda-city';
 
-// MEGA初始化容错：报错不崩溃
-let megaStorage;
+// MEGA初始化容错：报错不崩溃（适配megajs的正确初始化方式）
+let megaClient;
+let megaRootNode; // 缓存根节点，避免重复获取
 try {
   if (MEGA_EMAIL && MEGA_PASSWORD) {
-    megaStorage = mega({
+    // 关键修复2：megajs的正确初始化语法
+    megaClient = new Mega({
       email: MEGA_EMAIL,
       password: MEGA_PASSWORD
+    });
+    // 提前登录并获取根节点（异步容错）
+    megaClient.on('ready', async () => {
+      megaRootNode = await megaClient.root;
+      console.log('✅ MEGA客户端初始化成功');
+    });
+    megaClient.on('error', (err) => {
+      console.warn('MEGA客户端异常:', err.message);
+      megaClient = null;
     });
   } else {
     console.warn('MEGA_EMAIL/MEGA_PASSWORD未配置，MEGA功能测试模式');
   }
 } catch (err) {
   console.warn('MEGA版本兼容问题，暂时降级运行，不影响其他功能:', err.message);
-  megaStorage = null;
+  megaClient = null;
 }
 
 // 圖片上傳中間件
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// ========== 1. MEGA文件夾創建 + 圖片上傳接口（容错版） ==========
+// ========== 1. MEGA文件夾創建 + 圖片上傳接口（容错版，适配megajs API） ==========
 app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
   try {
     // 容错：MEGA未初始化则返回提示，不崩溃
-    if (!megaStorage) {
+    if (!megaClient || !megaRootNode) {
       return res.json({
         success: false,
         msg: 'MEGA暂时维护中，前后端已连通！先使用其他功能',
@@ -61,38 +73,31 @@ app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, msg: '房號和圖片為必填' });
     }
 
-    // 1. 获取MEGA根目录
-    const root = await megaStorage.getRootNode();
-    
-    // 2. 獲取/創建根文件夾
-    let rootFolder;
-    try {
-      rootFolder = await root.children.find(node => node.name === MEGA_ROOT_FOLDER);
-      if (!rootFolder) {
-        rootFolder = await root.mkdir(MEGA_ROOT_FOLDER);
-      }
-    } catch (err) {
-      rootFolder = await root.mkdir(MEGA_ROOT_FOLDER);
+    // 1. 获取/創建根文件夾（适配megajs语法）
+    let rootFolder = await megaRootNode.children.findOne({ name: MEGA_ROOT_FOLDER });
+    if (!rootFolder) {
+      rootFolder = await megaRootNode.mkdir(MEGA_ROOT_FOLDER);
     }
 
-    // 3. 獲取/創建房號文件夾
-    let roomFolder;
-    try {
-      roomFolder = await rootFolder.children.find(node => node.name === room);
-      if (!roomFolder) {
-        roomFolder = await rootFolder.mkdir(room);
-      }
-    } catch (err) {
+    // 2. 获取/創建房號文件夾
+    let roomFolder = await rootFolder.children.findOne({ name: room });
+    if (!roomFolder) {
       roomFolder = await rootFolder.mkdir(room);
     }
 
-    // 4. 上傳圖片
+    // 3. 上傳圖片（适配megajs的上传语法）
     const fileData = req.file.buffer;
     const fileNameFinal = fileName || `upload_${Date.now()}.jpg`;
-    const uploadFile = await roomFolder.upload(fileNameFinal, fileData);
-    
-    // 5. 获取公開链接
-    const fileLink = await uploadFile.link();
+    // 上传文件到指定文件夹
+    const uploadFile = await roomFolder.upload({
+      name: fileNameFinal,
+      size: fileData.length,
+      attributes: { type: req.file.mimetype }
+    }, fileData);
+
+    // 4. 获取公開链接（适配megajs的链接生成语法）
+    await uploadFile.link(); // 生成公开链接
+    const fileLink = uploadFile.publicUrl;
 
     res.json({
       success: true,
