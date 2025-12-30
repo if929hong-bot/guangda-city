@@ -136,6 +136,32 @@
     .btn-blue:hover {
       background-color: #0069d9;
     }
+    .btn-gray {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    .btn-gray:hover {
+      background-color: #5a6268;
+    }
+    .btn-red {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    .btn-red:hover {
+      background-color: #c82333;
+    }
     .empty-state {
       text-align: center;
       padding: 40px 0;
@@ -218,11 +244,56 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       overflow: hidden;
+      position: relative;
     }
     .image-item img {
       width: 100%;
       height: 150px;
       object-fit: cover;
+    }
+    .image-item .delete-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: rgba(220, 53, 69, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .image-item .delete-btn:hover {
+      background-color: #dc3545;
+    }
+    /* 繳費記錄樣式 */
+    .payment-item {
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .payment-item .payment-period {
+      font-weight: bold;
+      color: #1f4e8c;
+    }
+    .payment-item .payment-amount {
+      margin-top: 5px;
+    }
+    .payment-item .payment-time {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+    .payment-item .action-btns {
+      position: absolute;
+      top: 15px;
+      right: 15px;
     }
     /* 彈窗樣式（核心） */
     .modal-overlay {
@@ -430,15 +501,16 @@
     <div class="images-grid" id="imagesGrid" style="display: none;"></div>
   </div>
 
-  <!-- 新增繳費彈窗 -->
+  <!-- 新增/編輯繳費彈窗 -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal" id="paymentModalContent">
       <div class="modal-header" id="paymentModalHeader">
-        <div class="modal-title">新增繳費記錄</div>
+        <div class="modal-title" id="paymentModalTitle">新增繳費記錄</div>
         <button class="modal-close" id="closePaymentModal">×</button>
       </div>
       <div class="modal-body">
         <form class="modal-form" id="paymentForm">
+          <input type="hidden" id="editPaymentIndex">
           <!-- 自動帶入註冊時的租約期間 -->
           <div class="modal-form-group">
             <label for="rentalPeriod">租約期間 *</label>
@@ -578,17 +650,53 @@
     // 2. 彈窗控制 + 拖拽功能
     const paymentModal = document.getElementById('paymentModal');
     const uploadModal = document.getElementById('uploadModal');
-    // 打開/關閉繳費彈窗
-    document.getElementById('openPaymentModal').addEventListener('click', () => {
+    // 打開新增繳費彈窗
+    function openAddPaymentModal() {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      document.getElementById('paymentModalTitle').textContent = '新增繳費記錄';
+      document.getElementById('submitPayment').textContent = '新增';
+      document.getElementById('editPaymentIndex').value = '';
+      // 清空表單
+      document.getElementById('paymentForm').reset();
       document.getElementById('rentalPeriod').value = currentTenant.contractDate || '未設定租約期間';
+      document.getElementById('electricityUsage').value = '';
+      document.getElementById('electricityTotal').value = '';
+      document.getElementById('waterShare').value = '';
+      document.getElementById('totalAmount').value = '';
       paymentModal.style.display = 'block';
-    });
-    document.getElementById('openPaymentModal2').addEventListener('click', () => {
+    }
+    // 打開編輯繳費彈窗
+    function openEditPaymentModal(index) {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      const records = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+      const myRecords = records.filter(item => item.room === currentTenant.room);
+      const record = myRecords[index];
+      
+      document.getElementById('paymentModalTitle').textContent = '編輯繳費記錄';
+      document.getElementById('submitPayment').textContent = '保存';
+      document.getElementById('editPaymentIndex').value = index;
+      // 填充表單
       document.getElementById('rentalPeriod').value = currentTenant.contractDate || '未設定租約期間';
+      const [periodStart, periodEnd] = record.paymentPeriod.split(' - ');
+      document.getElementById('paymentPeriodStart').value = periodStart;
+      document.getElementById('paymentPeriodEnd').value = periodEnd;
+      document.getElementById('rent').value = record.rent;
+      document.getElementById('lastElectricity').value = record.lastElectricity;
+      document.getElementById('currentElectricity').value = record.currentElectricity;
+      document.getElementById('electricityPrice').value = record.electricityPrice;
+      document.getElementById('waterPeople').value = record.waterPeople;
+      document.getElementById('waterTotal').value = record.waterTotal;
+      document.getElementById('rentMonth').value = record.rentMonth;
+      document.getElementById('paymentLast5').value = record.paymentLast5;
+      document.getElementById('paymentDate').value = record.paymentDate;
+      document.getElementById('paymentNote').value = record.paymentNote;
+      // 重新計算
+      calculateElectricity();
       paymentModal.style.display = 'block';
-    });
+    }
+    // 繳費彈窗事件綁定
+    document.getElementById('openPaymentModal').addEventListener('click', openAddPaymentModal);
+    document.getElementById('openPaymentModal2').addEventListener('click', openAddPaymentModal);
     // 打開/關閉上傳彈窗
     document.getElementById('openUploadModal').addEventListener('click', () => uploadModal.style.display = 'block');
     document.getElementById('openUploadModal2').addEventListener('click', () => uploadModal.style.display = 'block');
@@ -669,9 +777,10 @@
       `;
     }
 
-    // 5. 繳費記錄上傳（同步到管理員後台）
+    // 5. 繳費記錄新增/編輯
     document.getElementById('submitPayment').addEventListener('click', () => {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      const editIndex = document.getElementById('editPaymentIndex').value;
       // 組合繳費區間
       const paymentPeriod = `${document.getElementById('paymentPeriodStart').value} - ${document.getElementById('paymentPeriodEnd').value}`;
       const paymentData = {
@@ -695,16 +804,26 @@
         paymentNote: document.getElementById('paymentNote').value,
         submitTime: new Date().toLocaleString()
       };
-      // 儲存到localStorage（管理員後台讀取）
+      // 處理新增/編輯
       let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
-      paymentRecords.push(paymentData);
+      const myRecords = paymentRecords.filter(item => item.room === currentTenant.room);
+      if (editIndex === '') {
+        // 新增
+        paymentRecords.push(paymentData);
+      } else {
+        // 編輯：先移除原記錄，再新增修改後的
+        const originalIndex = paymentRecords.findIndex(item => 
+          item.room === currentTenant.room && item.submitTime === myRecords[editIndex].submitTime
+        );
+        paymentRecords.splice(originalIndex, 1, paymentData);
+      }
       localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
       // 刷新頁面顯示
       renderPaymentList();
       paymentModal.style.display = 'none';
-      alert('繳費記錄新增成功！');
+      alert(editIndex === '' ? '繳費記錄新增成功！' : '繳費記錄修改成功！');
     });
-    // 渲染繳費記錄
+    // 渲染繳費記錄（帶編輯按鈕）
     function renderPaymentList() {
       const records = JSON.parse(localStorage.getItem('paymentRecords')) || [];
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -718,16 +837,19 @@
       }
       empty.style.display = 'none';
       list.style.display = 'block';
-      list.innerHTML = myRecords.map(item => `
-        <div style="border: 1px solid #eee; border-radius: 4px; padding: 15px; margin-bottom: 10px;">
-          <div style="font-weight: bold; color: #1f4e8c;">${item.paymentPeriod}</div>
-          <div style="margin-top: 5px;">總金額：${item.totalAmount}元</div>
-          <div style="font-size: 12px; color: #999; margin-top: 5px;">新增時間：${item.submitTime}</div>
+      list.innerHTML = myRecords.map((item, index) => `
+        <div class="payment-item">
+          <div class="payment-period">${item.paymentPeriod}</div>
+          <div class="payment-amount">總金額：${item.totalAmount}元</div>
+          <div class="payment-time">新增時間：${item.submitTime}</div>
+          <div class="action-btns">
+            <button class="btn-gray" onclick="openEditPaymentModal(${index})">編輯</button>
+          </div>
         </div>
       `).join('');
     }
 
-    // 6. 圖片上傳到MEGA（調用後端接口）
+    // 6. 圖片上傳 + 刪除功能
     async function uploadImageToMega(room, file) {
       try {
         const formData = new FormData();
@@ -764,7 +886,6 @@
         return null;
       }
     }
-
     // 圖片選擇與上傳事件
     document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
     document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -772,7 +893,6 @@
       document.getElementById('fileSelectedText').textContent = files.length === 0 ? '未選擇任何檔案' : 
         files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
     });
-
     // 確認上傳按鈕事件
     document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
       const files = document.getElementById('fileInput').files;
@@ -796,7 +916,7 @@
           const reader = new FileReader();
           await new Promise(resolve => {
             reader.onload = (e) => {
-              imageUrls.push({ url: e.target.result, name: files[i].name });
+              imageUrls.push({ url: e.target.result, name: files[i].name, uploadTime: new Date().toLocaleString() });
               resolve();
             };
             reader.readAsDataURL(files[i]);
@@ -814,8 +934,18 @@
         alert(`成功上傳${uploadResults.length}張圖片到MEGA！`);
       }
     });
-
-    // 加載房間圖片
+    // 刪除相簿圖片
+    function deleteRoomImage(index) {
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+      if (roomImages[currentTenant.room]) {
+        roomImages[currentTenant.room].splice(index, 1);
+        localStorage.setItem('roomImages', JSON.stringify(roomImages));
+        loadRoomImages(currentTenant.room);
+        alert('圖片刪除成功！');
+      }
+    }
+    // 加載房間圖片（帶刪除按鈕）
     function loadRoomImages(room) {
       const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
       const images = roomImages[room] || [];
@@ -828,9 +958,10 @@
       }
       empty.style.display = 'none';
       grid.style.display = 'grid';
-      grid.innerHTML = images.map(img => `
+      grid.innerHTML = images.map((img, index) => `
         <div class="image-item">
           <img src="${img.url}" alt="${img.name}">
+          <button class="delete-btn" onclick="deleteRoomImage(${index})">×</button>
         </div>
       `).join('');
     }
@@ -896,6 +1027,10 @@
       localStorage.removeItem('currentTenant');
       window.location.href = 'index.html';
     });
+
+    // 暴露編輯/刪除函數到全局
+    window.openEditPaymentModal = openEditPaymentModal;
+    window.deleteRoomImage = deleteRoomImage;
 
     // 頁面加載完成初始化
     window.addEventListener('load', init);
