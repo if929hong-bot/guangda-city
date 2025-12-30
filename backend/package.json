@@ -4,7 +4,6 @@
   "main": "server.js",  
   "scripts": {
     "start": "node server.js", 
-    "preinstall": "nvm use 18.20.3 || true",
     "reinstall": "rm -rf node_modules package-lock.json && npm install"
   },
   "engines": {  
@@ -15,7 +14,6 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
-    "mega": "^1.0.3", 
     "multer": "^2.0.2",
     "redis": "^4.6.12",
     "megajs": "^1.1.4" 
