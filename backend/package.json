@@ -1,24 +1,23 @@
 {
-  "name": "tenant-email-server",
+  "name": "tenant-management-server",
   "version": "1.0.0",
-  "main": "server.js",  
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js", 
+    "start": "node server.js",
     "reinstall": "rm -rf node_modules package-lock.json && npm install"
   },
-  "engines": {  
-    "node": "18.x"  
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
-    "@sendgrid/mail": "^7.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "multer": "^2.0.2",
     "redis": "^4.6.12",
-    "megajs": "^1.1.4" 
+    "megajs": "^1.1.4"
   },
-  "description": "廣大城後端服務（MEGA上傳+郵件發送）",
+  "description": "廣大城後端服務（MEGA上傳）",
   "keywords": [],
   "author": "",
   "license": "ISC",

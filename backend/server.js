@@ -2,7 +2,6 @@ require('dotenv').config(); // Zeabur会自动忽略，本地开发生效
 const express = require('express');
 const cors = require('cors');
 const { Mega } = require('megajs'); // 适配megajs模块
-const sgMail = require('@sendgrid/mail');
 const multer = require('multer');
 const { Buffer } = require('buffer');
 
@@ -12,14 +11,6 @@ app.use(cors()); // 强制跨域，解决前后端跨域问题
 app.use(express.json({ limit: '10mb' })); // 支持大文件JSON解析
 
 // ========== 环境变量配置 ==========
-// SendGrid配置
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-} else {
-  console.warn('⚠️ SENDGRID_API_KEY未配置，邮件功能进入测试模式');
-}
-
 // MEGA核心配置（全部从环境变量读取）
 const MEGA_EMAIL = process.env.MEGA_EMAIL;
 const MEGA_PASSWORD = process.env.MEGA_PASSWORD;
@@ -88,7 +79,6 @@ app.get('/api/test', (req, res) => {
     msg: '前后端連通成功！所有功能已兼容运行',
     time: new Date().toString(),
     env: {
-      hasSendGrid: !!SENDGRID_API_KEY,
       hasMegaConfig: !!MEGA_EMAIL && !!MEGA_PASSWORD
     }
   });
@@ -239,61 +229,6 @@ app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
   }
 });
 
-/**
- * 4. 密码重置邮件发送接口
- */
-app.post('/api/send-reset-email', async (req, res) => {
-  try {
-    const { email, resetToken, tenantName } = req.body;
-    if (!email || !resetToken) {
-      return res.status(400).json({
-        success: false,
-        msg: '信箱和重置令牌為必填参数'
-      });
-    }
-
-    // 构建重置链接（替换为你的前端域名）
-    const resetLink = `https://你的前端域名/reset-password.html?token=${resetToken}&email=${email}`;
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'if929hong@gmail.com';
-
-    // 邮件内容
-    const msg = {
-      to: email,
-      from: fromEmail,
-      subject: '廣大城租客管理 - 密碼重置申請',
-      html: `
-        <h3>親愛的 ${tenantName || '租客'} 您好：</h3>
-        <p>您申請了密碼重置，請點擊下方鏈接完成重置（鏈接有效期1小時）：</p>
-        <a href="${resetLink}" target="_blank">${resetLink}</a>
-        <p>若非您本人操作，請忽略此郵件。</p>
-      `
-    };
-
-    // 发送邮件（测试模式容错）
-    if (SENDGRID_API_KEY) {
-      await sgMail.send(msg);
-      res.json({
-        success: true,
-        msg: '重置郵件已發送，請檢查信箱'
-      });
-    } else {
-      res.json({
-        success: true,
-        msg: '测试模式：邮件已模拟发送（未配置SENDGRID_API_KEY）',
-        detail: `目标邮箱：${email}，重置链接：${resetLink}`
-      });
-    }
-
-  } catch (err) {
-    console.error('❌ 邮件发送失败:', err);
-    res.status(500).json({
-      success: false,
-      msg: '郵件發送失敗',
-      error: err.message || 'SendGrid配置錯誤或信箱無效'
-    });
-  }
-});
-
 // ========== 启动服务 ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -301,5 +236,4 @@ app.listen(PORT, () => {
   console.log(`✅ 测试接口：/api/test（前后端连通）`);
   console.log(`✅ MEGA测试接口：/api/test-mega（排查MEGA问题）`);
   console.log(`✅ 上传接口：/api/upload-to-mega（图片上传到MEGA）`);
-  console.log(`✅ 邮件接口：/api/send-reset-email（密码重置邮件）`);
 });
