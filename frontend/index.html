@@ -145,14 +145,6 @@
     #adminTab.active ~ .form-container .link-text a {
       color: #7B2CBF;
     }
-    /* 忘記密碼鏈接樣式優化 */
-    #forgotPasswordLink {
-      margin-bottom: 10px !important;
-    }
-    #forgotPasswordLink a {
-      color: #007bff;
-      font-weight: normal;
-    }
   </style>
 </head>
 <body>
@@ -179,10 +171,6 @@
         <input type="password" id="password" class="form-input" placeholder="請輸入密碼" minlength="6">
       </div>
       <button class="btn" id="loginBtn">登入</button>
-      <!-- 忘記密碼連結（樣式優化） -->
-      <div class="link-text" id="forgotPasswordLink">
-        <a href="forgot-password.html">忘記密碼？</a>
-      </div>
       <div class="link-text" id="registerLink">
         還沒有帳戶？ <a href="register.html">立即註冊</a>
       </div>
@@ -195,7 +183,6 @@
     const tenantTab = document.getElementById('tenantTab');
     const adminTab = document.getElementById('adminTab');
     const registerLink = document.getElementById('registerLink');
-    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
     const loginBtn = document.getElementById('loginBtn');
     const phoneInput = document.getElementById('phone');
     const passwordInput = document.getElementById('password');
@@ -212,16 +199,14 @@
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         
-        // 管理員頁面隱藏註冊和忘記密碼連結
+        // 管理員頁面隱藏註冊連結
         if (tab === adminTab) {
           registerLink.style.display = 'none';
-          forgotPasswordLink.style.display = 'none';
           // 管理員模式下更新提示文字
           phoneInput.placeholder = '請輸入管理員電話號碼';
           passwordInput.placeholder = '請輸入管理員密碼';
         } else {
           registerLink.style.display = 'block';
-          forgotPasswordLink.style.display = 'block';
           // 租客模式下還原提示文字
           phoneInput.placeholder = '請輸入您的電話號碼';
           passwordInput.placeholder = '請輸入密碼';
