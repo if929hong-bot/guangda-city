@@ -1,25 +1,64 @@
 {
   "name": "tenant-management-server",
   "version": "1.0.0",
+  "description": "廣大城後端服務（MEGA上傳）",
   "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "start": "node server.js",
-    "reinstall": "rm -rf node_modules package-lock.json && npm install"
+    "dev": "nodemon server.js",
+    "dev:debug": "nodemon --inspect server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "reinstall": "rm -rf node_modules package-lock.json && npm install",
+    "lint": "eslint .",
+    "predeploy": "npm run lint",
+    "heroku-postbuild": "echo \"No build step required\"",
+    "clean": "rm -rf temp_uploads"
   },
-  "engines": {
-    "node": "18.x"
-  },
+  "keywords": [
+    "tenant-management",
+    "mega",
+    "upload",
+    "express",
+    "backend"
+  ],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
+    "megajs": "^1.1.4",
     "multer": "^2.0.2",
-    "redis": "^4.6.12",
-    "megajs": "^1.1.4"
+    "redis": "^4.6.12"
   },
-  "description": "廣大城後端服務（MEGA上傳）",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "eslint": "^9.17.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.30.0",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^7.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/tenant-management-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/tenant-management-server/issues"
+  },
+  "homepage": "https://github.com/your-username/tenant-management-server#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "server.js",
+    "package.json",
+    "README.md",
+    ".env.example"
+  ]
 }
