@@ -1,7 +1,8 @@
 require('dotenv').config(); // Zeabur会自动忽略，本地开发生效
 const express = require('express');
 const cors = require('cors');
-const { Mega } = require('megajs'); // 适配megajs模块
+// 修复：改用默认导入获取Mega构造函数
+const Mega = require('megajs'); 
 const multer = require('multer');
 const { Buffer } = require('buffer');
 
@@ -28,23 +29,26 @@ async function initMegaClient() {
         throw new Error('MEGA_EMAIL/MEGA_PASSWORD环境变量未配置');
       }
 
-      // 创建MEGA客户端实例
+      // 创建MEGA客户端实例（已修复导入，可正常new）
       megaClient = new Mega({
         email: MEGA_EMAIL,
         password: MEGA_PASSWORD
       });
 
       // 监听客户端就绪事件
-      megaClient.on('ready', async () => {
+      megaClient.on('ready', () => {
         console.log('✅ MEGA客户端登录成功');
-        megaRootNode = await megaClient.root; // 获取根文件夹
-        // 检查/创建指定根文件夹
-        const targetFolder = await megaRootNode.children.findOne({ name: MEGA_ROOT_FOLDER });
-        if (!targetFolder) {
-          await megaRootNode.mkdir(MEGA_ROOT_FOLDER);
-          console.log(`✅ 已创建MEGA根文件夹: ${MEGA_ROOT_FOLDER}`);
-        }
-        resolve(); // 就绪后resolve，通知服务可以启动
+        // 修复：root是同步属性，无需await
+        megaRootNode = megaClient.root; 
+        // 检查/创建指定根文件夹（异步逻辑包裹在自执行函数中）
+        (async () => {
+          const targetFolder = await megaRootNode.children.findOne({ name: MEGA_ROOT_FOLDER });
+          if (!targetFolder) {
+            await megaRootNode.mkdir(MEGA_ROOT_FOLDER);
+            console.log(`✅ 已创建MEGA根文件夹: ${MEGA_ROOT_FOLDER}`);
+          }
+        })();
+        resolve(); // 就绪后通知服务启动
       });
 
       // 监听MEGA客户端错误
@@ -52,7 +56,14 @@ async function initMegaClient() {
         console.error('❌ MEGA客户端异常:', err.message);
         megaClient = null;
         megaRootNode = null;
-        reject(err); // 错误时reject，抛出异常
+        reject(err);
+      });
+
+      // 补充：监听连接关闭事件，增强容错
+      megaClient.on('close', () => {
+        console.warn('⚠️ MEGA客户端连接已关闭');
+        megaClient = null;
+        megaRootNode = null;
       });
 
     } catch (err) {
