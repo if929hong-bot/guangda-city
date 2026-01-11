@@ -136,6 +136,19 @@
     .btn-blue:hover {
       background-color: #0069d9;
     }
+    .btn-purple { /* 新增：创夹按钮样式 */
+      background-color: #6f42c1;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+    .btn-purple:hover {
+      background-color: #5a32a3;
+    }
     .btn-gray {
       background-color: #6c757d;
       color: white;
@@ -320,6 +333,9 @@
       transform: translate(-50%, -50%);
       z-index: 1001;
     }
+    .modal-small { /* 新增：小弹窗样式（创夹弹窗专用） */
+      max-width: 400px;
+    }
     .modal-header {
       padding: 15px 20px;
       background-color: #1f4e8c;
@@ -488,11 +504,14 @@
     <div id="paymentList" style="display: none;"></div>
   </div>
 
-  <!-- 我的相簿 -->
+  <!-- 我的相簿（新增：创建MEGA文件夹按钮） -->
   <div class="section">
     <div class="section-header">
       <div class="section-title">我的相簿</div>
-      <button class="btn-blue" id="openUploadModal">上傳圖片</button>
+      <div>
+        <button class="btn-blue" id="openUploadModal">上傳圖片</button>
+        <button class="btn-purple" id="openCreateFolderModal">創建MEGA房號文件夾</button> <!-- 新增：创夹按钮 -->
+      </div>
     </div>
     <div class="empty-state" id="imagesEmptyState">
       您還沒有上傳任何圖片
@@ -620,9 +639,34 @@
     </div>
   </div>
 
+  <!-- 新增：创建MEGA文件夹弹窗 -->
+  <div class="modal-overlay" id="createFolderModal">
+    <div class="modal modal-small" id="createFolderModalContent">
+      <div class="modal-header" id="createFolderModalHeader">
+        <div class="modal-title">創建MEGA房號文件夾</div>
+        <button class="modal-close" id="closeCreateFolderModal">×</button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form">
+          <div class="modal-form-group" style="grid-column: 1 / -1;">
+            <label for="folderRoomNumber">房號（自動帶入）</label>
+            <input type="text" id="folderRoomNumber" class="modal-form-input" readonly>
+            <div class="modal-form-note">文件夾將創建在 MEGA 根文件夾「${MEGA_ROOT_FOLDER || 'guangda-city'}」下</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn-cancel" id="cancelCreateFolderModal">取消</button>
+        <button class="modal-btn-confirm" id="confirmCreateFolderBtn">確認創建</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // 後端域名配置
     const API_DOMAIN = 'https://guangda-city-backend.zeabur.app';
+    // MEGA根文件夹名称（与后端保持一致）
+    const MEGA_ROOT_FOLDER = 'guangda-city';
 
     // 1. 電費/水費/總金額計算
     function calculateElectricity() {
@@ -650,6 +694,8 @@
     // 2. 彈窗控制 + 拖拽功能
     const paymentModal = document.getElementById('paymentModal');
     const uploadModal = document.getElementById('uploadModal');
+    const createFolderModal = document.getElementById('createFolderModal'); // 新增：创夹弹窗
+
     // 打開新增繳費彈窗
     function openAddPaymentModal() {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -665,6 +711,19 @@
       document.getElementById('totalAmount').value = '';
       paymentModal.style.display = 'block';
     }
+
+    // 新增：打開创建文件夹弹窗
+    function openCreateFolderModalFunc() {
+      const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
+      if (!currentTenant || !currentTenant.room) {
+        alert('無法獲取當前租客房號，請重新登入！');
+        return;
+      }
+      // 自动带入房号
+      document.getElementById('folderRoomNumber').value = currentTenant.room;
+      createFolderModal.style.display = 'block';
+    }
+
     // 打開編輯繳費彈窗
     function openEditPaymentModal(index) {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -694,22 +753,34 @@
       calculateElectricity();
       paymentModal.style.display = 'block';
     }
+
     // 繳費彈窗事件綁定
     document.getElementById('openPaymentModal').addEventListener('click', openAddPaymentModal);
     document.getElementById('openPaymentModal2').addEventListener('click', openAddPaymentModal);
+
+    // 新增：创夹按钮事件绑定
+    document.getElementById('openCreateFolderModal').addEventListener('click', openCreateFolderModalFunc);
+
     // 打開/關閉上傳彈窗
     document.getElementById('openUploadModal').addEventListener('click', () => uploadModal.style.display = 'block');
     document.getElementById('openUploadModal2').addEventListener('click', () => uploadModal.style.display = 'block');
+
     // 關閉彈窗
     document.getElementById('closePaymentModal').addEventListener('click', () => paymentModal.style.display = 'none');
     document.getElementById('cancelPaymentModal').addEventListener('click', () => paymentModal.style.display = 'none');
     document.getElementById('closeUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
     document.getElementById('cancelUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
+    // 新增：关闭创夹弹窗
+    document.getElementById('closeCreateFolderModal').addEventListener('click', () => createFolderModal.style.display = 'none');
+    document.getElementById('cancelCreateFolderModal').addEventListener('click', () => createFolderModal.style.display = 'none');
+
     // 點擊外層關閉
     window.addEventListener('click', (e) => {
       if (e.target === paymentModal) paymentModal.style.display = 'none';
       if (e.target === uploadModal) uploadModal.style.display = 'none';
+      if (e.target === createFolderModal) createFolderModal.style.display = 'none'; // 新增：创夹弹窗
     });
+
     // 拖拽功能
     function initDrag(header, modal) {
       let isDrag = false;
@@ -732,6 +803,7 @@
     }
     initDrag(document.getElementById('paymentModalHeader'), document.getElementById('paymentModalContent'));
     initDrag(document.getElementById('uploadModalHeader'), document.getElementById('uploadModalContent'));
+    initDrag(document.getElementById('createFolderModalHeader'), document.getElementById('createFolderModalContent')); // 新增：创夹弹窗拖拽
 
     // 3. 租約資訊加載
     function loadContractInfo() {
@@ -823,6 +895,7 @@
       paymentModal.style.display = 'none';
       alert(editIndex === '' ? '繳費記錄新增成功！' : '繳費記錄修改成功！');
     });
+
     // 渲染繳費記錄（帶編輯按鈕）
     function renderPaymentList() {
       const records = JSON.parse(localStorage.getItem('paymentRecords')) || [];
@@ -886,6 +959,7 @@
         return null;
       }
     }
+
     // 圖片選擇與上傳事件
     document.getElementById('selectFileBtn').addEventListener('click', () => document.getElementById('fileInput').click());
     document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -893,6 +967,7 @@
       document.getElementById('fileSelectedText').textContent = files.length === 0 ? '未選擇任何檔案' : 
         files.length === 1 ? `已選擇：${files[0].name}` : `已選擇${files.length}個檔案`;
     });
+
     // 確認上傳按鈕事件
     document.getElementById('confirmUploadBtn').addEventListener('click', async () => {
       const files = document.getElementById('fileInput').files;
@@ -934,6 +1009,7 @@
         alert(`成功上傳${uploadResults.length}張圖片到MEGA！`);
       }
     });
+
     // 刪除相簿圖片
     function deleteRoomImage(index) {
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -945,6 +1021,7 @@
         alert('圖片刪除成功！');
       }
     }
+
     // 加載房間圖片（帶刪除按鈕）
     function loadRoomImages(room) {
       const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
@@ -966,7 +1043,58 @@
       `).join('');
     }
 
-    // 7. 忘記密碼發送郵件（暴露到全局，供登入頁調用）
+    // 新增：7. 调用后端创建MEGA文件夹接口
+    async function createMegaRoomFolder(room) {
+      try {
+        // 显示加载状态
+        const createBtn = document.getElementById('confirmCreateFolderBtn');
+        const originalText = createBtn.innerHTML;
+        createBtn.innerHTML = '<span class="loading"></span>創建中...';
+        createBtn.disabled = true;
+
+        // 发送POST请求到后端新增接口
+        const response = await fetch(`${API_DOMAIN}/api/create-mega-room-folder`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ room: room })
+        });
+
+        const result = await response.json();
+
+        // 恢复按钮状态
+        createBtn.innerHTML = originalText;
+        createBtn.disabled = false;
+
+        // 处理结果提示
+        if (result.success) {
+          alert(result.msg + `\n文件夾名稱：${result.data.folderName}\n所屬根文件夾：${result.data.rootFolder}`);
+          createFolderModal.style.display = 'none';
+        } else {
+          alert('創建失敗：' + result.msg);
+        }
+      } catch (err) {
+        console.error('MEGA文件夾創建請求錯誤:', err);
+        alert('網絡錯誤，請稍後再試');
+        // 恢复按钮状态
+        const createBtn = document.getElementById('confirmCreateFolderBtn');
+        createBtn.innerHTML = '確認創建';
+        createBtn.disabled = false;
+      }
+    }
+
+    // 新增：绑定创夹确认按钮事件
+    document.getElementById('confirmCreateFolderBtn').addEventListener('click', () => {
+      const room = document.getElementById('folderRoomNumber').value;
+      if (!room) {
+        alert('房號為空，無法創建文件夾！');
+        return;
+      }
+      createMegaRoomFolder(room);
+    });
+
+    // 8. 忘記密碼發送郵件（暴露到全局，供登入頁調用）
     window.sendResetEmail = async function(email, tenantName) {
       try {
         // 生成重置令牌
@@ -1001,7 +1129,7 @@
       }
     }
 
-    // 8. 頁面初始化
+    // 9. 頁面初始化
     function init() {
       // 驗證登入
       const currentTenant = JSON.parse(localStorage.getItem('currentTenant'));
@@ -1028,9 +1156,10 @@
       window.location.href = 'index.html';
     });
 
-    // 暴露編輯/刪除函數到全局
+    // 暴露編輯/刪除/创夹函數到全局
     window.openEditPaymentModal = openEditPaymentModal;
     window.deleteRoomImage = deleteRoomImage;
+    window.openCreateFolderModalFunc = openCreateFolderModalFunc;
 
     // 頁面加載完成初始化
     window.addEventListener('load', init);
