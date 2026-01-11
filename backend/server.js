@@ -16,51 +16,53 @@ const MEGA_EMAIL = process.env.MEGA_EMAIL;
 const MEGA_PASSWORD = process.env.MEGA_PASSWORD;
 const MEGA_ROOT_FOLDER = process.env.MEGA_ROOT_FOLDER || 'guangda-city';
 
-// ========== MEGA客户端初始化（带容错） ==========
+// ========== MEGA客户端初始化（带容错 + 就绪等待） ==========
 let megaClient = null;
 let megaRootNode = null; // 缓存根文件夹节点
 
-// 初始化MEGA客户端
+// 初始化MEGA客户端（返回Promise，等待就绪事件）
 async function initMegaClient() {
-  try {
-    if (!MEGA_EMAIL || !MEGA_PASSWORD) {
-      throw new Error('MEGA_EMAIL/MEGA_PASSWORD环境变量未配置');
-    }
-
-    // 创建MEGA客户端实例
-    megaClient = new Mega({
-      email: MEGA_EMAIL,
-      password: MEGA_PASSWORD
-    });
-
-    // 监听客户端就绪事件
-    megaClient.on('ready', async () => {
-      console.log('✅ MEGA客户端登录成功');
-      megaRootNode = await megaClient.root; // 获取根文件夹
-      // 检查/创建指定根文件夹
-      const targetFolder = await megaRootNode.children.findOne({ name: MEGA_ROOT_FOLDER });
-      if (!targetFolder) {
-        await megaRootNode.mkdir(MEGA_ROOT_FOLDER);
-        console.log(`✅ 已创建MEGA根文件夹: ${MEGA_ROOT_FOLDER}`);
+  return new Promise((resolve, reject) => {
+    try {
+      if (!MEGA_EMAIL || !MEGA_PASSWORD) {
+        throw new Error('MEGA_EMAIL/MEGA_PASSWORD环境变量未配置');
       }
-    });
 
-    // 监听MEGA客户端错误
-    megaClient.on('error', (err) => {
-      console.error('❌ MEGA客户端异常:', err.message);
+      // 创建MEGA客户端实例
+      megaClient = new Mega({
+        email: MEGA_EMAIL,
+        password: MEGA_PASSWORD
+      });
+
+      // 监听客户端就绪事件
+      megaClient.on('ready', async () => {
+        console.log('✅ MEGA客户端登录成功');
+        megaRootNode = await megaClient.root; // 获取根文件夹
+        // 检查/创建指定根文件夹
+        const targetFolder = await megaRootNode.children.findOne({ name: MEGA_ROOT_FOLDER });
+        if (!targetFolder) {
+          await megaRootNode.mkdir(MEGA_ROOT_FOLDER);
+          console.log(`✅ 已创建MEGA根文件夹: ${MEGA_ROOT_FOLDER}`);
+        }
+        resolve(); // 就绪后resolve，通知服务可以启动
+      });
+
+      // 监听MEGA客户端错误
+      megaClient.on('error', (err) => {
+        console.error('❌ MEGA客户端异常:', err.message);
+        megaClient = null;
+        megaRootNode = null;
+        reject(err); // 错误时reject，抛出异常
+      });
+
+    } catch (err) {
+      console.error('❌ MEGA初始化失败:', err.message);
       megaClient = null;
       megaRootNode = null;
-    });
-
-  } catch (err) {
-    console.error('❌ MEGA初始化失败:', err.message);
-    megaClient = null;
-    megaRootNode = null;
-  }
+      reject(err);
+    }
+  });
 }
-
-// 启动时初始化MEGA
-initMegaClient();
 
 // ========== 图片上传中间件 ==========
 const storage = multer.memoryStorage();
@@ -178,7 +180,7 @@ app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
     if (!megaClient || !megaRootNode) {
       return res.status(200).json({
         success: false,
-        msg: 'MEGA服务暂时不可用',
+        msg: 'MEGA服務暫時不可用',
         detail: '请先配置并测试MEGA连接（/api/test-mega）'
       });
     }
@@ -312,12 +314,17 @@ app.post('/api/create-mega-room-folder', async (req, res) => {
   }
 });
 
-// ========== 启动服务 ==========
+// ========== 启动服务（等待MEGA初始化完成后启动） ==========
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ 後端服務已啟動 → http://localhost:${PORT}`);
-  console.log(`✅ 测试接口：/api/test（前后端连通）`);
-  console.log(`✅ MEGA测试接口：/api/test-mega（排查MEGA问题）`);
-  console.log(`✅ 上传接口：/api/upload-to-mega（图片上传到MEGA）`);
-  console.log(`✅ 创夹接口：/api/create-mega-room-folder（创建房号MEGA文件夹）`);
+initMegaClient().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ 後端服務已啟動 → http://localhost:${PORT}`);
+    console.log(`✅ 测试接口：/api/test（前后端连通）`);
+    console.log(`✅ MEGA测试接口：/api/test-mega（排查MEGA问题）`);
+    console.log(`✅ 上传接口：/api/upload-to-mega（图片上传到MEGA）`);
+    console.log(`✅ 创夹接口：/api/create-mega-room-folder（创建房号MEGA文件夹）`);
+  });
+}).catch((err) => {
+  console.error('❌ MEGA初始化失败，服务启动异常:', err.message);
+  process.exit(1); // 初始化失败退出进程，便于Zeabur重启重试
 });
