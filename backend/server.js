@@ -229,6 +229,89 @@ app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
   }
 });
 
+/**
+ * 4. 新增：创建以房号命名的MEGA文件夹接口（专属接口）
+ */
+app.post('/api/create-mega-room-folder', async (req, res) => {
+  try {
+    // 1. 接收并校验前端传递的房号参数
+    const { room } = req.body;
+    if (!room) {
+      return res.status(400).json({
+        success: false,
+        msg: '房號為必填参数，無法創建文件夾'
+      });
+    }
+
+    // 2. 检查MEGA客户端是否可用（复用现有容错逻辑）
+    if (!megaClient || !megaRootNode) {
+      // 尝试重新初始化MEGA客户端
+      await initMegaClient();
+      if (!megaClient || !megaRootNode) {
+        return res.status(200).json({
+          success: false,
+          msg: 'MEGA服務暫時不可用',
+          detail: '請先測試MEGA連接（/api/test-mega），或稍後重試'
+        });
+      }
+    }
+
+    // 3. 查找/创建根文件夹（guangda-city）
+    let rootFolder = await megaRootNode.children.findOne({ name: MEGA_ROOT_FOLDER });
+    if (!rootFolder) {
+      rootFolder = await megaRootNode.mkdir(MEGA_ROOT_FOLDER);
+      console.log(`✅ 已創建MEGA根文件夾: ${MEGA_ROOT_FOLDER}`);
+    }
+
+    // 4. 校验房号格式（过滤MEGA禁止的非法字符）
+    const validRoomName = room.replace(/[\/:*?"<>|]/g, '');
+    if (validRoomName !== room) {
+      console.warn(`⚠️ 房號包含非法字符，已自動處理為: ${validRoomName}`);
+    }
+
+    // 5. 查找/创建房号对应的文件夹
+    let roomFolder = await rootFolder.children.findOne({ name: validRoomName });
+    if (roomFolder) {
+      // 文件夹已存在，直接返回成功（避免重复创建）
+      return res.json({
+        success: true,
+        msg: '文件夾已存在，無需重複創建',
+        data: {
+          room: validRoomName,
+          folderName: validRoomName,
+          rootFolder: MEGA_ROOT_FOLDER,
+          folderId: roomFolder.id
+        }
+      });
+    }
+
+    // 6. 新建房号文件夹
+    roomFolder = await rootFolder.mkdir(validRoomName);
+    console.log(`✅ 已在MEGA創建房號文件夾: ${validRoomName}（隸屬於${MEGA_ROOT_FOLDER}）`);
+
+    // 7. 返回创建结果
+    res.json({
+      success: true,
+      msg: '房號文件夾創建成功',
+      data: {
+        room: validRoomName,
+        folderName: validRoomName,
+        rootFolder: MEGA_ROOT_FOLDER,
+        folderId: roomFolder.id
+      }
+    });
+
+  } catch (err) {
+    console.error('❌ MEGA文件夾創建失敗:', err);
+    res.status(200).json({
+      success: false,
+      msg: '房號文件夾創建失敗',
+      error: err.message,
+      tip: '常見原因：房號格式非法、MEGA服務器限制、網絡問題'
+    });
+  }
+});
+
 // ========== 启动服务 ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -236,4 +319,5 @@ app.listen(PORT, () => {
   console.log(`✅ 测试接口：/api/test（前后端连通）`);
   console.log(`✅ MEGA测试接口：/api/test-mega（排查MEGA问题）`);
   console.log(`✅ 上传接口：/api/upload-to-mega（图片上传到MEGA）`);
+  console.log(`✅ 创夹接口：/api/create-mega-room-folder（创建房号MEGA文件夹）`);
 });
