@@ -383,10 +383,6 @@
       background-color: #6c757d;
       cursor: not-allowed;
     }
-    .mega-link {
-      color: #007bff;
-      text-decoration: none;
-    }
     .r2-link {
       color: #28a745;
       text-decoration: none;
@@ -555,7 +551,7 @@
           <th>電話</th>
           <th>信箱</th>
           <th>房號</th>
-          <th>R2 存儲桶</th>
+          <th>Cloudflare R2 存儲桶</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -577,7 +573,7 @@
           <th>相簿名稱</th>
           <th>圖片數量</th>
           <th>建立時間</th>
-          <th>R2 存儲桶</th>
+          <th>Cloudflare R2 存儲桶</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -638,8 +634,8 @@
           <div class="error-message" id="albumNameError">請輸入相簿名稱</div>
         </div>
         <div class="form-group">
-          <label for="albumImageUrls">R2 圖片URL（多張請用逗號分隔）</label>
-          <input type="text" id="albumImageUrls" class="form-input" placeholder="https://xxx.r2.dev/101_xxx.jpg,https://xxx.r2.dev/101_yyy.jpg">
+          <label for="albumImageUrls">Cloudflare R2 圖片URL（多張請用逗號分隔）</label>
+          <input type="text" id="albumImageUrls" class="form-input" placeholder="https://xxx.r2.dev/xxx.jpg,https://xxx.r2.dev/yyy.jpg">
         </div>
         <button type="button" class="btn-submit" id="submitAlbumBtn">
           <i class="fa-solid fa-save"></i> 新增相簿
@@ -714,8 +710,8 @@
     let currentEditingAlbumIndex = -1;
     let currentEditingPaymentIndex = -1;
 
-    // 配置：替換為你的 R2 公開訪問地址
-    const R2_PUBLIC_URL = "https://pub-8931ead8377a4cd595e51d38fb210975.r2.dev"; // 你的 R2 公開 URL
+    // 配置：Cloudflare R2 公開訪問地址
+    const R2_PUBLIC_URL = "https://pub-8931ead8377a4cd595e51d38fb210975.r2.dev";
 
     const adminTabs = document.querySelectorAll('.admin-tab');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -1030,7 +1026,7 @@
           <td>${phone}</td>
           <td>${email}</td>
           <td>${room}</td>
-          <td><a href="${R2_PUBLIC_URL}" target="_blank" class="r2-link">查看 R2 存儲桶</a></td>
+          <td><a href="${R2_PUBLIC_URL}" target="_blank" class="r2-link">查看 Cloudflare R2 存儲桶</a></td>
           <td>
             <button class="btn-view" onclick="viewTenantImages('${room}')">查看圖片</button>
             <button class="btn-delete" onclick="deleteTenant(${index})">刪除</button>
@@ -1192,9 +1188,9 @@
           <td>${name}</td>
           <td>${imageCount}</td>
           <td>${createTime}</td>
-          <td><a href="${R2_PUBLIC_URL}" target="_blank" class="r2-link">查看 R2 存儲桶</a></td>
+          <td><a href="${R2_PUBLIC_URL}" target="_blank" class="r2-link">查看 Cloudflare R2 存儲桶</a></td>
           <td>
-            <button class="btn-view" onclick="        viewAlbumImages(${index})">查看圖片</button>
+            <button class="btn-view" onclick="viewAlbumImages(${index})">查看圖片</button>
             <button class="btn-edit" onclick="editAlbum(${index})">編輯</button>
             <button class="btn-delete" onclick="deleteAlbum(${index})">刪除</button>
           </td>
@@ -1291,7 +1287,7 @@
       
       if (!isValid) return;
       
-      // 處理圖片URL
+      // 處理圖片URL（無文件夾路徑）
       const images = albumImageUrls ? albumImageUrls.split(',').map(url => url.trim()).filter(url => url) : [];
       
       // 構建相簿數據
@@ -1315,7 +1311,7 @@
         
         localStorage.setItem('roomAlbums', JSON.stringify(albums));
         
-        // 同步更新房間圖片本地存儲
+        // 同步更新房間圖片本地存儲（無文件夾邏輯）
         let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
         if (!roomImages[albumRoom]) roomImages[albumRoom] = [];
         images.forEach(url => {
@@ -1333,12 +1329,302 @@
         document.getElementById('albumSaveSuccess').style.display = 'block';
         setTimeout(() => {
           document.getElementById('addAlbumModal').style.display = 'none';
-          loadAlbumData();
+                    loadAlbumData();
           loadStatsData();
         }, 1500);
       } catch (e) {
-        console.error('提交相簿失敗:', e);
-        alert('新增/編輯相簿失敗，請稍後再試！');
+        console.error('保存相簿失敗:', e);
+        alert('保存相簿失敗，請稍後再試！');
+      }
+    }
+
+    // 查看相簿圖片
+    function viewAlbumImages(index) {
+      try {
+        const albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
+        if (index < 0 || index >= albums.length) return;
+        
+        const album = albums[index];
+        const images = album.images || [];
+        
+        // 創建臨時圖片網格容器（如果不存在）
+        let imagesModal = document.getElementById('tempImagesModal');
+        if (!imagesModal) {
+          imagesModal = document.createElement('div');
+          imagesModal.id = 'tempImagesModal';
+          imagesModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            padding: 40px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          `;
+          
+          const closeBtn = document.createElement('button');
+          closeBtn.style.cssText = `
+            align-self: flex-end;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-bottom: 20px;
+          `;
+          closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> 關閉';
+          closeBtn.addEventListener('click', () => {
+            imagesModal.remove();
+          });
+          
+          const title = document.createElement('h2');
+          title.style.cssText = `
+            color: white;
+            margin-bottom: 30px;
+            font-size: 18px;
+          `;
+          title.textContent = `相簿：${album.room} - ${album.name}`;
+          
+          imagesModal.appendChild(closeBtn);
+          imagesModal.appendChild(title);
+          document.body.appendChild(imagesModal);
+        } else {
+          // 清空原有內容（除了關閉按鈕和標題）
+          const grid = imagesModal.querySelector('.images-grid');
+          if (grid) grid.remove();
+        }
+        
+        // 創建圖片網格
+        const imagesGrid = document.createElement('div');
+        imagesGrid.className = 'images-grid';
+        imagesGrid.style.gap = '15px';
+        imagesGrid.style.width = '90%';
+        imagesGrid.style.maxWidth = '1200px';
+        
+        if (images.length === 0) {
+          const emptyTip = document.createElement('div');
+          emptyTip.style.cssText = 'color: #999; text-align: center; padding: 50px 0; width: 100%;';
+          emptyTip.textContent = '此相簿暫無圖片';
+          imagesGrid.appendChild(emptyTip);
+        } else {
+          images.forEach(imgUrl => {
+            const imageItem = document.createElement('div');
+            imageItem.className = 'image-item';
+            imageItem.style.position = 'relative';
+            
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.alt = `相簿圖片 ${imgUrl.split('/').pop()}`;
+            img.style.width = '100%';
+            img.style.height = '180px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '4px';
+            img.style.cursor = 'pointer';
+            img.style.transition = 'opacity 0.3s ease';
+            
+            // 圖片預覽事件
+            img.addEventListener('click', () => {
+              const previewModal = document.getElementById('imagePreviewModal');
+              const previewImg = document.getElementById('imagePreviewImg');
+              previewImg.src = imgUrl;
+              previewModal.style.display = 'flex';
+            });
+            
+            // 下載按鈕
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+            downloadBtn.style.cssText = `
+              position: absolute;
+              bottom: 10px;
+              right: 10px;
+              background-color: rgba(0, 123, 255, 0.9);
+              color: white;
+              border: none;
+              border-radius: 50%;
+              width: 30px;
+              height: 30px;
+              font-size: 14px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            `;
+            
+            downloadBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const a = document.createElement('a');
+              a.href = imgUrl;
+              a.download = imgUrl.split('/').pop() || `album_${album.room}_${new Date().getTime()}.jpg`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            });
+            
+            imageItem.appendChild(img);
+            imageItem.appendChild(downloadBtn);
+            imagesGrid.appendChild(imageItem);
+          });
+        }
+        
+        imagesModal.appendChild(imagesGrid);
+        
+        // 點擊彈窗外層關閉
+        imagesModal.addEventListener('click', (e) => {
+          if (e.target === imagesModal) imagesModal.remove();
+        });
+      } catch (e) {
+        console.error('查看相簿圖片失敗:', e);
+        alert('加載相簿圖片失敗，請稍後再試！');
+      }
+    }
+
+    // 查看租客對應圖片
+    function viewTenantImages(room) {
+      try {
+        const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
+        const images = roomImages[room] ? roomImages[room].map(item => item.url) : [];
+        
+        // 創建臨時圖片彈窗
+        let imagesModal = document.getElementById('tempImagesModal');
+        if (!imagesModal) {
+          imagesModal = document.createElement('div');
+          imagesModal.id = 'tempImagesModal';
+          imagesModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            padding: 40px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          `;
+          
+          const closeBtn = document.createElement('button');
+          closeBtn.style.cssText = `
+            align-self: flex-end;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-bottom: 20px;
+          `;
+          closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> 關閉';
+          closeBtn.addEventListener('click', () => {
+            imagesModal.remove();
+          });
+          
+          const title = document.createElement('h2');
+          title.style.cssText = `
+            color: white;
+            margin-bottom: 30px;
+            font-size: 18px;
+          `;
+          title.textContent = `租客房間圖片：${room}`;
+          
+          imagesModal.appendChild(closeBtn);
+          imagesModal.appendChild(title);
+          document.body.appendChild(imagesModal);
+        } else {
+          const grid = imagesModal.querySelector('.images-grid');
+          if (grid) grid.remove();
+        }
+        
+        // 創建圖片網格
+        const imagesGrid = document.createElement('div');
+        imagesGrid.className = 'images-grid';
+        imagesGrid.style.gap = '15px';
+        imagesGrid.style.width = '90%';
+        imagesGrid.style.maxWidth = '1200px';
+        
+        if (images.length === 0) {
+          const emptyTip = document.createElement('div');
+          emptyTip.style.cssText = 'color: #999; text-align: center; padding: 50px 0; width: 100%;';
+          emptyTip.textContent = '此房間暫無圖片';
+          imagesGrid.appendChild(emptyTip);
+        } else {
+          images.forEach(imgUrl => {
+            const imageItem = document.createElement('div');
+            imageItem.className = 'image-item';
+            imageItem.style.position = 'relative';
+            
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.alt = `房間圖片 ${imgUrl.split('/').pop()}`;
+            img.style.width = '100%';
+            img.style.height = '180px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '4px';
+            img.style.cursor = 'pointer';
+            img.style.transition = 'opacity 0.3s ease';
+            
+            // 圖片預覽
+            img.addEventListener('click', () => {
+              const previewModal = document.getElementById('imagePreviewModal');
+              const previewImg = document.getElementById('imagePreviewImg');
+              previewImg.src = imgUrl;
+              previewModal.style.display = 'flex';
+            });
+            
+            // 下載按鈕
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+            downloadBtn.style.cssText = `
+              position: absolute;
+              bottom: 10px;
+              right: 10px;
+              background-color: rgba(0, 123, 255, 0.9);
+              color: white;
+              border: none;
+              border-radius: 50%;
+              width: 30px;
+              height: 30px;
+              font-size: 14px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            `;
+            
+            downloadBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const a = document.createElement('a');
+              a.href = imgUrl;
+              a.download = imgUrl.split('/').pop() || `room_${room}_${new Date().getTime()}.jpg`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            });
+            
+            imageItem.appendChild(img);
+            imageItem.appendChild(downloadBtn);
+            imagesGrid.appendChild(imageItem);
+          });
+        }
+        
+        imagesModal.appendChild(imagesGrid);
+        
+        // 點擊外層關閉
+        imagesModal.addEventListener('click', (e) => {
+          if (e.target === imagesModal) imagesModal.remove();
+        });
+      } catch (e) {
+        console.error('查看租客房間圖片失敗:', e);
+        alert('加載房間圖片失敗，請稍後再試！');
       }
     }
 
@@ -1363,9 +1649,12 @@
       totalPayments.textContent = payments.length;
       let sum = 0;
       payments.forEach(payment => {
-        sum += parseFloat(payment.totalAmount || 0);
+        const rent = parseInt(payment.rent) || 0;
+        const electricity = parseInt(payment.electricity) || 0;
+        const water = parseInt(payment.water) || 0;
+        sum += rent + electricity + water;
       });
-      totalAmountSum.textContent = `$${sum.toFixed(2)}`;
+      totalAmountSum.textContent = `$${sum.toLocaleString('zh-TW')}`;
 
       if (payments.length === 0) {
         emptyText.style.display = 'block';
@@ -1383,31 +1672,31 @@
       payments.forEach((payment, index) => {
         const tr = document.createElement('tr');
         tr.setAttribute('data-index', index);
-        const tenantName = payment.tenantName || '未填寫';
+        const name = payment.tenantName || '未填寫';
         const room = payment.room || '未填寫';
         const rentalPeriod = payment.rentalPeriod || '未填寫';
         const paymentPeriod = payment.paymentPeriod || '未填寫';
-        const rent = payment.rent || '0';
-        const electricityTotal = payment.electricityTotal || '0';
-        const waterShare = payment.waterShare || '0';
-        const totalAmount = payment.totalAmount || '0';
-        const paymentDate = payment.paymentDate || '未填寫';
-        const paymentLast5 = payment.paymentLast5 || '未填寫';
-        const submitTime = payment.submitTime || '未知時間';
+        const rent = parseInt(payment.rent) || 0;
+        const electricity = parseInt(payment.electricity) || 0;
+        const water = parseInt(payment.water) || 0;
+        const total = rent + electricity + water;
+        const payDate = payment.paymentDate || '未填寫';
+        const last5 = payment.paymentLast5 || '未填寫';
+        const createTime = payment.createTime || '未知時間';
 
         tr.innerHTML = `
           <td><input type="checkbox" class="payment-checkbox" data-index="${index}"></td>
-          <td>${tenantName}</td>
+          <td>${name}</td>
           <td>${room}</td>
           <td>${rentalPeriod}</td>
           <td>${paymentPeriod}</td>
-          <td>${rent}</td>
-          <td>${electricityTotal}</td>
-          <td>${waterShare}</td>
-          <td>${totalAmount}</td>
-          <td>${paymentDate}</td>
-          <td>${paymentLast5}</td>
-          <td>${submitTime}</td>
+          <td>$${rent.toLocaleString('zh-TW')}</td>
+          <td>$${electricity.toLocaleString('zh-TW')}</td>
+          <td>$${water.toLocaleString('zh-TW')}</td>
+          <td>$${total.toLocaleString('zh-TW')}</td>
+          <td>${payDate}</td>
+          <td>${last5}</td>
+          <td>${createTime}</td>
           <td>
             <button class="btn-edit" onclick="editPayment(${index})">編輯</button>
             <button class="btn-delete" onclick="deletePayment(${index})">刪除</button>
@@ -1438,22 +1727,22 @@
         document.getElementById('paymentRentalPeriod').value = payment.rentalPeriod || '';
         document.getElementById('paymentPeriod').value = payment.paymentPeriod || '';
         document.getElementById('paymentRent').value = payment.rent || 0;
-        document.getElementById('paymentElectricity').value = payment.electricityTotal || 0;
-        document.getElementById('paymentWater').value = payment.waterShare || 0;
+        document.getElementById('paymentElectricity').value = payment.electricity || 0;
+        document.getElementById('paymentWater').value = payment.water || 0;
         document.getElementById('paymentDate').value = payment.paymentDate || '';
         document.getElementById('paymentLast5').value = payment.paymentLast5 || '';
         
         // 打開彈窗
         document.getElementById('addPaymentModal').style.display = 'flex';
         document.querySelector('#addPaymentModal .modal-title').textContent = '編輯繳費記錄';
-        document.getElementById('submitPaymentBtn').textContent = '保存修改';
+        document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
       } catch (e) {
         console.error('加載繳費記錄編輯數據失敗:', e);
         alert('編輯繳費記錄失敗，請稍後再試！');
       }
     }
 
-    // 刪除繳費記錄
+    // 刪除單條繳費記錄
     function deletePayment(index) {
       if (!confirm('確定要刪除該繳費記錄嗎？刪除後無法復原！')) return;
 
@@ -1541,41 +1830,58 @@
 
     // 提交繳費記錄（新增/編輯）
     function submitPayment() {
-      const paymentTenantName = document.getElementById('paymentTenantName').value.trim();
-      const paymentRoom = document.getElementById('paymentRoom').value.trim();
+      const tenantName = document.getElementById('paymentTenantName').value.trim();
+      const room = document.getElementById('paymentRoom').value.trim();
+      const rentalPeriod = document.getElementById('paymentRentalPeriod').value.trim();
       const paymentPeriod = document.getElementById('paymentPeriod').value.trim();
-      const paymentRent = document.getElementById('paymentRent').value.trim();
+      const rent = document.getElementById('paymentRent').value.trim();
+      const electricity = document.getElementById('paymentElectricity').value.trim() || '0';
+      const water = document.getElementById('paymentWater').value.trim() || '0';
+      const payDate = document.getElementById('paymentDate').value.trim();
+      const last5 = document.getElementById('paymentLast5').value.trim();
       
       // 表單驗證
       let isValid = true;
-      document.querySelectorAll('#addPaymentForm .error-message').forEach(error => {
-        error.style.display = 'none';
-      });
-      document.querySelectorAll('#addPaymentForm .form-input').forEach(input => {
-        input.classList.remove('error');
-      });
+      const errorElements = {
+        tenantName: document.getElementById('paymentTenantNameError'),
+        room: document.getElementById('paymentRoomError'),
+        paymentPeriod: document.getElementById('paymentPeriodError'),
+        rent: document.getElementById('paymentRentError')
+      };
+      const inputElements = {
+        tenantName: document.getElementById('paymentTenantName'),
+        room: document.getElementById('paymentRoom'),
+        paymentPeriod: document.getElementById('paymentPeriod'),
+        rent: document.getElementById('paymentRent')
+      };
       
-      if (!paymentTenantName) {
-        document.getElementById('paymentTenantName').classList.add('error');
-        document.getElementById('paymentTenantNameError').style.display = 'block';
+      // 重置錯誤狀態
+      for (const key in errorElements) {
+        errorElements[key].style.display = 'none';
+        inputElements[key].classList.remove('error');
+      }
+      
+      if (!tenantName) {
+        inputElements.tenantName.classList.add('error');
+        errorElements.tenantName.style.display = 'block';
         isValid = false;
       }
       
-      if (!paymentRoom) {
-        document.getElementById('paymentRoom').classList.add('error');
-        document.getElementById('paymentRoomError').style.display = 'block';
+      if (!room) {
+        inputElements.room.classList.add('error');
+        errorElements.room.style.display = 'block';
         isValid = false;
       }
       
       if (!paymentPeriod) {
-        document.getElementById('paymentPeriod').classList.add('error');
-        document.getElementById('paymentPeriodError').style.display = 'block';
+        inputElements.paymentPeriod.classList.add('error');
+        errorElements.paymentPeriod.style.display = 'block';
         isValid = false;
       }
       
-      if (!paymentRent) {
-        document.getElementById('paymentRent').classList.add('error');
-        document.getElementById('paymentRentError').style.display = 'block';
+      if (!rent || isNaN(parseInt(rent)) || parseInt(rent) < 0) {
+        inputElements.rent.classList.add('error');
+        errorElements.rent.style.display = 'block';
         isValid = false;
       }
       
@@ -1583,17 +1889,16 @@
       
       // 構建繳費記錄數據
       const paymentData = {
-        tenantName: paymentTenantName,
-        room: paymentRoom,
-        rentalPeriod: document.getElementById('paymentRentalPeriod').value.trim() || '',
+        tenantName: tenantName,
+        room: room,
+        rentalPeriod: rentalPeriod,
         paymentPeriod: paymentPeriod,
-        rent: paymentRent,
-        electricityTotal: document.getElementById('paymentElectricity').value.trim() || '0',
-        waterShare: document.getElementById('paymentWater').value.trim() || '0',
-        totalAmount: (parseFloat(paymentRent) + parseFloat(document.getElementById('paymentElectricity').value || 0) + parseFloat(document.getElementById('paymentWater').value || 0)).toFixed(2),
-        paymentDate: document.getElementById('paymentDate').value.trim() || '',
-        paymentLast5: document.getElementById('paymentLast5').value.trim() || '',
-        submitTime: currentEditingPaymentIndex === -1 ? new Date().toLocaleString('zh-TW') : JSON.parse(localStorage.getItem('paymentRecords'))[currentEditingPaymentIndex].submitTime,
+        rent: parseInt(rent),
+        electricity: parseInt(electricity),
+        water: parseInt(water),
+        paymentDate: payDate,
+        paymentLast5: last5,
+        createTime: currentEditingPaymentIndex === -1 ? new Date().toLocaleString('zh-TW') : JSON.parse(localStorage.getItem('paymentRecords'))[currentEditingPaymentIndex].createTime,
         updateTime: new Date().toLocaleString('zh-TW')
       };
       
@@ -1617,8 +1922,8 @@
           loadStatsData();
         }, 1500);
       } catch (e) {
-        console.error('提交繳費記錄失敗:', e);
-        alert('新增/編輯繳費記錄失敗，請稍後再試！');
+        console.error('保存繳費記錄失敗:', e);
+        alert('保存繳費記錄失敗，請稍後再試！');
       }
     }
 
@@ -1630,138 +1935,23 @@
         const payments = JSON.parse(localStorage.getItem('paymentRecords')) || [];
         
         // 計算總金額
-        let sum = 0;
+        let totalAmount = 0;
         payments.forEach(payment => {
-          sum += parseFloat(payment.totalAmount || 0);
+          const rent = parseInt(payment.rent) || 0;
+          const electricity = parseInt(payment.electricity) || 0;
+          const water = parseInt(payment.water) || 0;
+          totalAmount += rent + electricity + water;
         });
         
         // 更新頁面統計
         document.getElementById('totalTenants').textContent = tenants.length;
         document.getElementById('totalAlbums').textContent = albums.length;
         document.getElementById('totalPayments').textContent = payments.length;
-        document.getElementById('totalAmountSum').textContent = `$${sum.toFixed(2)}`;
+        document.getElementById('totalAmountSum').textContent = `$${totalAmount.toLocaleString('zh-TW')}`;
       } catch (e) {
         console.error('加載統計數據失敗:', e);
       }
     }
-
-    // 查看租客圖片
-    function viewTenantImages(room) {
-      try {
-        const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        const images = roomImages[room] || [];
-        
-        // 創建臨時圖片列表彈窗（复用圖片預覽樣式，擴展列表展示）
-        const modal = document.createElement('div');
-        modal.className = 'image-preview-modal';
-        modal.style.display = 'flex';
-        modal.style.flexDirection = 'column';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.className = 'image-preview-close';
-        closeBtn.textContent = '×';
-        closeBtn.onclick = () => modal.remove();
-        
-        const imagesGrid = document.createElement('div');
-        imagesGrid.className = 'images-grid';
-        imagesGrid.style.width = '90%';
-        imagesGrid.style.margin = '0 auto';
-        
-        if (images.length === 0) {
-          imagesGrid.innerHTML = '<div class="empty-text" style="color: white;">該租客尚未上傳任何圖片</div>';
-        } else {
-          images.forEach(img => {
-            const imageItem = document.createElement('div');
-            imageItem.className = 'image-item';
-            imageItem.innerHTML = `
-              <img src="${img.url}" alt="${img.name}" onclick="previewImage('${img.url}')">
-              <button class="download-btn" onclick="downloadImage('${img.url}', '${img.name}')">↓</button>
-            `;
-            imagesGrid.appendChild(imageItem);
-          });
-        }
-        
-        modal.appendChild(closeBtn);
-        modal.appendChild(imagesGrid);
-        document.body.appendChild(modal);
-      } catch (e) {
-        console.error('查看租客圖片失敗:', e);
-        alert('加載圖片失敗，請稍後再試！');
-      }
-    }
-
-    // 查看相簿圖片
-    function viewAlbumImages(index) {
-      try {
-        const albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
-        if (index < 0 || index >= albums.length) return;
-        
-        const album = albums[index];
-        const images = album.images || [];
-        
-        // 創建臨時圖片列表彈窗
-        const modal = document.createElement('div');
-        modal.className = 'image-preview-modal';
-        modal.style.display = 'flex';
-        modal.style.flexDirection = 'column';
-        
-        const closeBtn = document.createElement('span');
-        closeBtn.className = 'image-preview-close';
-        closeBtn.textContent = '×';
-        closeBtn.onclick = () => modal.remove();
-        
-        const imagesGrid = document.createElement('div');
-        imagesGrid.className = 'images-grid';
-        imagesGrid.style.width = '90%';
-        imagesGrid.style.margin = '0 auto';
-        
-        if (images.length === 0) {
-          imagesGrid.innerHTML = '<div class="empty-text" style="color: white;">該相簿尚未添加任何圖片</div>';
-        } else {
-          images.forEach(imgUrl => {
-            const imgName = imgUrl.split('/').pop() || 'r2_image.jpg';
-            const imageItem = document.createElement('div');
-            imageItem.className = 'image-item';
-            imageItem.innerHTML = `
-              <img src="${imgUrl}" alt="${imgName}" onclick="previewImage('${imgUrl}')">
-              <button class="download-btn" onclick="downloadImage('${imgUrl}', '${imgName}')">↓</button>
-            `;
-            imagesGrid.appendChild(imageItem);
-          });
-        }
-        
-        modal.appendChild(closeBtn);
-        modal.appendChild(imagesGrid);
-        document.body.appendChild(modal);
-      } catch (e) {
-        console.error('查看相簿圖片失敗:', e);
-        alert('加載圖片失敗，請稍後再試！');
-      }
-    }
-
-    // 圖片預覽（全局函數）
-    window.previewImage = function(imageUrl) {
-      document.getElementById('imagePreviewImg').src = imageUrl;
-      document.getElementById('imagePreviewModal').style.display = 'flex';
-    }
-
-    // 圖片下載（全局函數）
-    window.downloadImage = function(imageUrl, fileName) {
-      const a = document.createElement('a');
-      a.href = imageUrl;
-      a.download = fileName || 'r2_image.jpg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    // 暴露全局函數
-    window.viewTenantImages = viewTenantImages;
-    window.viewAlbumImages = viewAlbumImages;
-    window.editAlbum = editAlbum;
-    window.deleteAlbum = deleteAlbum;
-    window.editPayment = editPayment;
-    window.deletePayment = deletePayment;
   </script>
 </body>
 </html>
