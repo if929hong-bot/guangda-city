@@ -1,15 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const Mega = require('megajs');
+const { S3Client, PutObjectCommand, CreateBucketCommand, ListObjectsV2Command, HeadBucketCommand } = require('@aws-sdk/client-s3');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid'); // 用于生成唯一文件名，避免冲突
 
 // 初始化Express應用
 const app = express();
 
-// CORS配置 - 允許所有來源（生產環境應限制）
+// CORS配置 - 允許所有來源（生產環境應限制為前端域名）
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -19,103 +20,74 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ========== 環境變量配置 ==========
-const MEGA_EMAIL = process.env.MEGA_EMAIL;
-const MEGA_PASSWORD = process.env.MEGA_PASSWORD;
-const MEGA_ROOT_FOLDER = process.env.MEGA_ROOT_FOLDER || 'guangda-city';
+// ========== 環境變量配置（Cloudflare R2） ==========
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'guangda-city';
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL; // 前端一致的R2公開訪問地址（如：https://pub-xxx.r2.dev）
 
-// ========== MEGA客戶端初始化 ==========
-let megaClient = null;
-let megaRootNode = null;
+// ========== Cloudflare R2 客戶端初始化（兼容AWS S3協議） ==========
+let r2Client = null;
 
-// 輔助函數：查找文件夾
-async function findFolderByName(parent, folderName) {
-  if (!parent || !parent.children) return null;
-  
-  const children = Array.from(parent.children);
-  for (const child of children) {
-    if (child.type === 'folder' && child.name === folderName) {
-      return child;
+// 初始化R2客戶端
+function initR2Client() {
+  try {
+    // 校驗必要配置
+    if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
+      console.warn('⚠️ Cloudflare R2 環境變量未配置完整，上傳功能將不可用');
+      console.warn('需要配置：R2_ACCOUNT_ID、R2_ACCESS_KEY_ID、R2_SECRET_ACCESS_KEY、R2_BUCKET_NAME');
+      return null;
     }
-  }
-  return null;
-}
 
-// 輔助函數：查找文件
-async function findFileByName(parent, fileName) {
-  if (!parent || !parent.children) return null;
-  
-  const children = Array.from(parent.children);
-  for (const child of children) {
-    if (child.type === 'file' && child.name === fileName) {
-      return child;
-    }
-  }
-  return null;
-}
+    console.log('🔄 正在初始化Cloudflare R2客戶端...');
 
-// 初始化MEGA客戶端
-async function initMegaClient() {
-  return new Promise((resolve, reject) => {
-    try {
-      if (!MEGA_EMAIL || !MEGA_PASSWORD) {
-        console.warn('⚠️ MEGA環境變量未配置，上傳功能將不可用');
-        resolve(); // 不reject，讓服務器繼續啟動
-        return;
+    // R2 兼容 S3 協議，使用 AWS S3 Client 初始化
+    r2Client = new S3Client({
+      region: 'auto', // R2 固定為 auto
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY
       }
+    });
 
-      console.log('🔄 正在初始化MEGA客戶端...');
-
-      megaClient = new Mega({
-        email: MEGA_EMAIL,
-        password: MEGA_PASSWORD,
-        autologin: true
-      });
-
-      megaClient.on('ready', async () => {
-        console.log('✅ MEGA客戶端登錄成功');
-        megaRootNode = megaClient.root;
-        
-        // 確保根文件夾存在
-        try {
-          let rootFolder = await findFolderByName(megaRootNode, MEGA_ROOT_FOLDER);
-          if (!rootFolder) {
-            rootFolder = await megaClient.mkdir(MEGA_ROOT_FOLDER, megaRootNode);
-            console.log(`✅ 已創建MEGA根文件夾: ${MEGA_ROOT_FOLDER}`);
-          } else {
-            console.log(`✅ MEGA根文件夾已存在: ${MEGA_ROOT_FOLDER}`);
-          }
-        } catch (folderErr) {
-          console.warn(`⚠️ 創建根文件夾失敗: ${folderErr.message}`);
-        }
-        
-        resolve();
-      });
-
-      megaClient.on('error', (err) => {
-        console.error('❌ MEGA客戶端錯誤:', err.message);
-        megaClient = null;
-        megaRootNode = null;
-        reject(err);
-      });
-
-      megaClient.on('close', () => {
-        console.warn('⚠️ MEGA客戶端連接已關閉');
-        megaClient = null;
-        megaRootNode = null;
-      });
-
-    } catch (err) {
-      console.error('❌ MEGA初始化失敗:', err.message);
-      megaClient = null;
-      megaRootNode = null;
-      reject(err);
-    }
-  });
+    console.log('✅ Cloudflare R2 客戶端初始化成功');
+    return r2Client;
+  } catch (err) {
+    console.error('❌ Cloudflare R2 客戶端初始化失敗:', err.message);
+    return null;
+  }
 }
 
-// ========== 圖片上傳中間件 ==========
-// 創建臨時目錄
+// 驗證/創建 R2 Bucket（對應原MEGA根文件夾）
+async function ensureR2BucketExists() {
+  if (!r2Client) return false;
+
+  try {
+    // 先檢查Bucket是否存在
+    await r2Client.send(new HeadBucketCommand({ Bucket: R2_BUCKET_NAME }));
+    console.log(`✅ R2 Bucket 已存在: ${R2_BUCKET_NAME}`);
+    return true;
+  } catch (err) {
+    // Bucket不存在，嘗試創建
+    if (err.name === 'NotFound') {
+      try {
+        await r2Client.send(new CreateBucketCommand({ Bucket: R2_BUCKET_NAME }));
+        console.log(`✅ 已創建 R2 Bucket: ${R2_BUCKET_NAME}`);
+        return true;
+      } catch (createErr) {
+        console.error(`⚠️ 創建 R2 Bucket 失敗: ${createErr.message}`);
+        return false;
+      }
+    } else {
+      console.error(`⚠️ 檢查 R2 Bucket 失敗: ${err.message}`);
+      return false;
+    }
+  }
+}
+
+// ========== 圖片上傳中間件（與原邏輯一致，臨時存儲本地） ==========
 const tempDir = path.join(__dirname, 'temp_uploads');
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
@@ -140,102 +112,102 @@ const upload = multer({
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: '廣大城租戶管理後端服務',
+    message: '廣大城租戶管理後端服務（Cloudflare R2 版）',
     status: 'running',
     time: new Date().toISOString(),
-    mega: megaClient ? 'connected' : 'disconnected',
+    r2: r2Client ? 'connected' : 'disconnected',
     endpoints: {
       test: '/api/test',
-      testMega: '/api/test-mega',
-      upload: '/api/upload-to-mega',
-      createFolder: '/api/create-mega-room-folder'
+      testR2: '/api/test-r2',
+      upload: '/api/upload-to-r2',
+      createFolder: '/api/create-r2-room-folder',
+      files: '/api/files/:room'
     }
   });
 });
 
-// ========== 核心接口 ==========
+// ========== 核心接口（替換原MEGA接口，适配R2） ==========
 /**
  * 1. 測試接口：驗證前後端連通性
  */
 app.get('/api/test', (req, res) => {
   res.json({
     success: true,
-    msg: '前後端連通成功！所有功能已兼容運行',
+    msg: '前後端連通成功！所有功能已兼容 Cloudflare R2 運行',
     time: new Date().toString(),
     environment: {
-      hasMegaConfig: !!(MEGA_EMAIL && MEGA_PASSWORD),
-      megaClientReady: !!(megaClient && megaRootNode),
-      rootFolder: MEGA_ROOT_FOLDER
+      hasR2Config: !!(R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET_NAME),
+      r2ClientReady: !!r2Client,
+      bucket: R2_BUCKET_NAME,
+      publicUrl: R2_PUBLIC_URL || '未配置公開訪問地址'
     }
   });
 });
 
 /**
- * 2. MEGA連接測試接口
+ * 2. R2 連接測試接口
  */
-app.get('/api/test-mega', async (req, res) => {
+app.get('/api/test-r2', async (req, res) => {
   try {
-    // 檢查環境變量
-    if (!MEGA_EMAIL || !MEGA_PASSWORD) {
+    // 檢查環境變量完整性
+    if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
       return res.status(200).json({
         success: false,
-        msg: 'MEGA配置缺失',
+        msg: 'Cloudflare R2 配置缺失',
         detail: {
-          error: 'MEGA_EMAIL或MEGA_PASSWORD未配置',
-          tip: '請在Zeabur的環境變量中添加MEGA_EMAIL和MEGA_PASSWORD',
-          required: true
+          error: '必要環境變量未配置完整',
+          required: ['R2_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME'],
+          tip: '請在環境變量中添加完整的 R2 配置信息'
         }
       });
     }
 
-    // 檢查客戶端是否初始化
-    if (!megaClient || !megaRootNode) {
-      // 嘗試重新初始化
-      try {
-        await initMegaClient();
-      } catch (initErr) {
+    // 檢查客戶端是否初始化，未初始化則嘗試重新初始化
+    if (!r2Client) {
+      r2Client = initR2Client();
+      if (!r2Client) {
         return res.status(200).json({
           success: false,
-          msg: 'MEGA客戶端初始化失敗',
+          msg: 'R2 客戶端初始化失敗',
           detail: {
-            error: initErr.message,
-            tip: '請檢查賬號密碼是否正確，或MEGA服務器是否可訪問'
+            error: '客戶端創建失敗，請檢查配置格式',
+            tip: '請核對 R2 賬戶ID、Access Key 等信息是否正確'
           }
         });
       }
     }
 
-    // 測試文件夾訪問
-    const rootFolder = await findFolderByName(megaRootNode, MEGA_ROOT_FOLDER);
-    
+    // 測試 Bucket 可訪問性
+    const bucketExists = await ensureR2BucketExists();
+
     res.json({
       success: true,
-      msg: 'MEGA連接測試成功',
+      msg: 'Cloudflare R2 連接測試成功',
       detail: {
-        email: MEGA_EMAIL,
-        rootFolder: MEGA_ROOT_FOLDER,
-        folderExists: !!rootFolder,
-        clientReady: !!(megaClient && megaRootNode),
-        tip: 'MEGA服務已準備就緒'
+        bucket: R2_BUCKET_NAME,
+        bucketExists: bucketExists,
+        clientReady: !!r2Client,
+        publicUrl: R2_PUBLIC_URL,
+        tip: 'R2 服務已準備就緒，可進行文件上傳操作'
       }
     });
 
   } catch (err) {
     res.status(200).json({
       success: false,
-      msg: 'MEGA連接測試失敗',
+      msg: 'Cloudflare R2 連接測試失敗',
       detail: {
         error: err.message,
-        tip: '常見原因：賬號密碼錯誤、MEGA服務器限制、網絡問題'
+        tip: '常見原因：配置錯誤、R2 桶權限不足、網絡問題'
       }
     });
   }
 });
 
 /**
- * 3. MEGA圖片上傳接口
+ * 3. R2 圖片上傳接口（對應原 MEGA 上傳接口，返回前端可訪問的公開 URL）
  */
-app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
+app.post('/api/upload-to-r2', upload.single('image'), async (req, res) => {
   try {
     // 基礎參數校驗
     const { room, fileName } = req.body;
@@ -246,65 +218,67 @@ app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
       });
     }
 
-    // 檢查MEGA客戶端是否可用
-    if (!megaClient || !megaRootNode) {
+    // 檢查 R2 客戶端是否可用
+    if (!r2Client) {
       return res.status(503).json({
         success: false,
-        msg: 'MEGA服務暫時不可用',
-        detail: '請先配置並測試MEGA連接（GET /api/test-mega）'
+        msg: 'Cloudflare R2 服務暫時不可用',
+        detail: '請先配置並測試 R2 連接（GET /api/test-r2）'
       });
     }
 
-    // 處理文件名（過濾非法字符）
-    const safeRoom = room.replace(/[\/:*?"<>|]/g, '_');
-    const finalFileName = fileName || 
-      `upload_${Date.now()}_${safeRoom}${path.extname(req.file.originalname)}`;
+    // 確保 Bucket 存在
+    const bucketExists = await ensureR2BucketExists();
+    if (!bucketExists) {
+      return res.status(500).json({
+        success: false,
+        msg: 'R2 Bucket 不存在且創建失敗，無法上傳文件'
+      });
+    }
 
-    // 讀取文件
+    // 處理路徑與文件名（R2 中「文件夾」是虛擬路徑，用 / 分隔）
+    const safeRoom = room.replace(/[\/:*?"<>|]/g, '_'); // 過濾非法字符
+    const fileExt = path.extname(req.file.originalname);
+    const baseFileName = fileName ? fileName.replace(/[\/:*?"<>|]/g, '_') : `upload_${uuidv4()}`;
+    const finalFileName = `${baseFileName}${fileExt}`;
+    const r2ObjectKey = `${safeRoom}/${finalFileName}`; // 虛擬文件路徑：房號/文件名（對應原MEGA文件夾）
+
+    // 讀取本地臨時文件
     const fileBuffer = fs.readFileSync(req.file.path);
 
-    // 查找或創建根文件夾
-    let rootFolder = await findFolderByName(megaRootNode, MEGA_ROOT_FOLDER);
-    if (!rootFolder) {
-      rootFolder = await megaClient.mkdir(MEGA_ROOT_FOLDER, megaRootNode);
-    }
+    // 上傳文件到 R2 Bucket
+    const uploadCommand = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: r2ObjectKey, // 虛擬文件路徑，實現「文件夾」效果
+      Body: fileBuffer,
+      ContentType: req.file.mimetype, // 設置文件MIME類型，方便前端識別
+      ACL: 'public-read' // 設置公開讀取權限（需確保 R2 桶已開啟公開訪問）
+    });
 
-    // 查找或創建房間文件夾
-    let roomFolder = await findFolderByName(rootFolder, safeRoom);
-    if (!roomFolder) {
-      roomFolder = await megaClient.mkdir(safeRoom, rootFolder);
-      console.log(`✅ 已創建房號文件夾: ${safeRoom}`);
-    }
+    await r2Client.send(uploadCommand);
 
-    // 上傳文件到MEGA
-    const uploadedFile = await megaClient.upload({
-      name: finalFileName,
-      size: fileBuffer.length,
-      data: fileBuffer
-    }, roomFolder);
-
-    // 生成下載鏈接
-    const downloadLink = await uploadedFile.link();
+    // 構建前端可訪問的公開 URL（與前端 R2_PUBLIC_URL 對齊）
+    const publicFileUrl = `${R2_PUBLIC_URL}/${r2ObjectKey}`;
 
     // 清理臨時文件
     fs.unlinkSync(req.file.path);
 
-    // 返回結果
+    // 返回結果（與原 MEGA 接口返回格式兼容，降低前端改造成本）
     res.json({
       success: true,
-      msg: '圖片上傳成功',
+      msg: '圖片上傳到 R2 成功',
       data: {
-        fileId: uploadedFile.downloadId,
-        fileName: uploadedFile.name,
-        fileLink: downloadLink,
+        fileId: r2ObjectKey,
+        fileName: finalFileName,
+        fileLink: publicFileUrl, // 前端可直接訪問的公開 URL
         room: safeRoom,
-        size: uploadedFile.size,
+        size: req.file.size,
         timestamp: new Date().toISOString()
       }
     });
 
   } catch (err) {
-    console.error('❌ MEGA上傳失敗:', err);
+    console.error('❌ R2 上傳失敗:', err);
     
     // 清理臨時文件
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
@@ -315,15 +289,15 @@ app.post('/api/upload-to-mega', upload.single('image'), async (req, res) => {
       success: false,
       msg: '圖片上傳失敗',
       error: err.message,
-      tip: '請檢查MEGA連接或文件大小（限制10MB）'
+      tip: '請檢查 R2 連接、文件大小（限制10MB）或 Bucket 權限'
     });
   }
 });
 
 /**
- * 4. 創建以房號命名的MEGA文件夾接口
+ * 4. 創建以房號命名的 R2 「文件夾」接口（虛擬路徑，無需真實創建文件夾）
  */
-app.post('/api/create-mega-room-folder', async (req, res) => {
+app.post('/api/create-r2-room-folder', async (req, res) => {
   try {
     // 接收並校驗參數
     const { room } = req.body;
@@ -334,86 +308,84 @@ app.post('/api/create-mega-room-folder', async (req, res) => {
       });
     }
 
-    // 檢查MEGA客戶端
-    if (!megaClient || !megaRootNode) {
+    // 檢查 R2 客戶端
+    if (!r2Client) {
       return res.status(503).json({
         success: false,
-        msg: 'MEGA服務暫時不可用',
-        detail: '請先配置並測試MEGA連接'
+        msg: 'Cloudflare R2 服務暫時不可用',
+        detail: '請先配置並測試 R2 連接'
+      });
+    }
+
+    // 確保 Bucket 存在
+    const bucketExists = await ensureR2BucketExists();
+    if (!bucketExists) {
+      return res.status(500).json({
+        success: false,
+        msg: 'R2 Bucket 不存在且創建失敗，無法創建文件夾'
       });
     }
 
     // 處理房號（過濾非法字符）
     const safeRoom = room.replace(/[\/:*?"<>|]/g, '_');
+    const virtualFolderKey = `${safeRoom}/`; // R2 虛擬文件夾標識（以 / 結尾）
 
-    // 查找根文件夾
-    let rootFolder = await findFolderByName(megaRootNode, MEGA_ROOT_FOLDER);
-    if (!rootFolder) {
-      rootFolder = await megaClient.mkdir(MEGA_ROOT_FOLDER, megaRootNode);
-    }
+    // R2 中虛擬文件夾無需「創建」，只需驗證是否已有對應路徑的文件
+    // 查詢該房號路徑下是否有文件
+    const listCommand = new ListObjectsV2Command({
+      Bucket: R2_BUCKET_NAME,
+      Prefix: virtualFolderKey,
+      MaxKeys: 1
+    });
 
-    // 檢查是否已存在
-    let roomFolder = await findFolderByName(rootFolder, safeRoom);
-    if (roomFolder) {
-      return res.json({
-        success: true,
-        msg: '文件夾已存在，無需重複創建',
-        data: {
-          room: safeRoom,
-          folderName: safeRoom,
-          rootFolder: MEGA_ROOT_FOLDER,
-          folderId: roomFolder.downloadId
-        }
-      });
-    }
+    const listResult = await r2Client.send(listCommand);
+    const folderHasFiles = !!listResult.Contents && listResult.Contents.length > 0;
 
-    // 創建新文件夾
-    roomFolder = await megaClient.mkdir(safeRoom, rootFolder);
-    console.log(`✅ 已在MEGA創建房號文件夾: ${safeRoom}`);
-
+    // 返回結果（兼容原 MEGA 接口格式）
     res.json({
       success: true,
-      msg: '房號文件夾創建成功',
+      msg: folderHasFiles ? '文件夾已存在（包含文件），無需重複創建' : '虛擬文件夾創建成功（R2 無需真實創建文件夾）',
       data: {
         room: safeRoom,
         folderName: safeRoom,
-        rootFolder: MEGA_ROOT_FOLDER,
-        folderId: roomFolder.downloadId,
+        bucket: R2_BUCKET_NAME,
+        virtualFolderKey: virtualFolderKey,
+        publicFolderUrl: `${R2_PUBLIC_URL}/${virtualFolderKey}`,
         created: new Date().toISOString()
       }
     });
 
   } catch (err) {
-    console.error('❌ MEGA文件夾創建失敗:', err);
+    console.error('❌ R2 文件夾創建失敗:', err);
     res.status(500).json({
       success: false,
       msg: '房號文件夾創建失敗',
       error: err.message,
-      tip: '常見原因：房號格式非法、MEGA服務器限制、網絡問題'
+      tip: '常見原因：房號格式非法、R2 服務器限制、網絡問題'
     });
   }
 });
 
 /**
- * 5. 獲取文件列表接口
+ * 5. 獲取文件列表接口（查詢 R2 對應房號路徑下的文件）
  */
 app.get('/api/files/:room?', async (req, res) => {
   try {
     const { room } = req.params;
     
-    if (!megaClient || !megaRootNode) {
+    if (!r2Client) {
       return res.status(503).json({
         success: false,
-        msg: 'MEGA服務暫時不可用'
+        msg: 'Cloudflare R2 服務暫時不可用'
       });
     }
 
-    // 查找根文件夾
-    const rootFolder = await findFolderByName(megaRootNode, MEGA_ROOT_FOLDER);
-    if (!rootFolder) {
+    // 確保 Bucket 存在
+    const bucketExists = await ensureR2BucketExists();
+    if (!bucketExists) {
       return res.json({
         success: true,
-        msg: '根文件夾不存在',
+        msg: 'R2 Bucket 不存在',
         data: []
       });
     }
@@ -421,29 +393,41 @@ app.get('/api/files/:room?', async (req, res) => {
     let files = [];
     
     if (room) {
-      // 獲取特定房間的文件
-      const roomFolder = await findFolderByName(rootFolder, room);
-      if (roomFolder && roomFolder.children) {
-        const children = Array.from(roomFolder.children);
-        files = children
-          .filter(child => child.type === 'file')
-          .map(file => ({
-            name: file.name,
-            size: file.size,
-            modified: file.timestamp,
-            type: file.attributes?.type || 'unknown'
-          }));
+      // 獲取特定房間的文件（查詢對應虛擬路徑下的所有文件）
+      const safeRoom = room.replace(/[\/:*?"<>|]/g, '_');
+      const listCommand = new ListObjectsV2Command({
+        Bucket: R2_BUCKET_NAME,
+        Prefix: `${safeRoom}/`,
+        Delimiter: '/' // 忽略子文件夾（如果有）
+      });
+
+      const listResult = await r2Client.send(listCommand);
+      
+      if (listResult.Contents && listResult.Contents.length > 0) {
+        files = listResult.Contents.map(file => ({
+          name: path.basename(file.Key),
+          size: file.Size,
+          modified: file.LastModified,
+          type: file.ContentType || 'unknown',
+          fileLink: `${R2_PUBLIC_URL}/${file.Key}`
+        }));
       }
     } else {
-      // 獲取所有房間列表
-      const children = Array.from(rootFolder.children);
-      const roomFolders = children.filter(child => child.type === 'folder');
+      // 獲取所有房間列表（查詢所有頂級虛擬文件夾）
+      const listCommand = new ListObjectsV2Command({
+        Bucket: R2_BUCKET_NAME,
+        Delimiter: '/' // 分組獲取頂級文件夾（房號）
+      });
+
+      const listResult = await r2Client.send(listCommand);
       
-      files = roomFolders.map(folder => ({
-        name: folder.name,
-        type: 'folder',
-        itemCount: folder.children ? Array.from(folder.children).length : 0
-      }));
+      if (listResult.CommonPrefixes && listResult.CommonPrefixes.length > 0) {
+        files = listResult.CommonPrefixes.map(prefix => ({
+          name: path.basename(prefix.Prefix.replace(/\/$/, '')),
+          type: 'folder',
+          itemCount: 0 // R2 無法直接獲取文件夾內文件數量，如需精確需單獨查詢
+        }));
+      }
     }
 
     res.json({
@@ -453,7 +437,7 @@ app.get('/api/files/:room?', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ 獲取文件列表失敗:', err);
+    console.error('❌ 獲取 R2 文件列表失敗:', err);
     res.status(500).json({
       success: false,
       msg: '獲取文件列表失敗',
@@ -486,30 +470,36 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
-    // 初始化MEGA（如果配置了憑證）
-    if (MEGA_EMAIL && MEGA_PASSWORD) {
-      await initMegaClient();
+    // 初始化 R2 客戶端（如果配置了完整憑證）
+    if (R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET_NAME) {
+      r2Client = initR2Client();
+      // 驗證 Bucket 存在性
+      if (r2Client) {
+        await ensureR2BucketExists();
+      }
     } else {
-      console.warn('⚠️ MEGA憑證未配置，上傳功能將不可用');
+      console.warn('⚠️ Cloudflare R2 憑證未配置完整，上傳功能將不可用');
     }
 
     // 啟動HTTP服務器
     const server = app.listen(PORT, () => {
       console.log(`
-🚀 服務器已啟動
+🚀 服務器已啟動（Cloudflare R2 版）
 📍 地址: http://localhost:${PORT}
 📅 時間: ${new Date().toLocaleString()}
 🔧 環境: ${process.env.NODE_ENV || 'development'}
-📂 MEGA狀態: ${megaClient ? '已連接' : '未連接'}
+📂 R2 狀態: ${r2Client ? '已連接' : '未連接'}
+📦 R2 Bucket: ${R2_BUCKET_NAME || '未配置'}
+🌐 R2 公開地址: ${R2_PUBLIC_URL || '未配置'}
       `);
       
       console.log('\n📋 可用接口：');
       console.log('  GET  /             - 服務狀態');
       console.log('  GET  /api/test     - 連通性測試');
-      console.log('  GET  /api/test-mega - MEGA連接測試');
-      console.log('  POST /api/upload-to-mega - 上傳圖片');
-      console.log('  POST /api/create-mega-room-folder - 創建房號文件夾');
-      console.log('  GET  /api/files/:room - 獲取文件列表');
+      console.log('  GET  /api/test-r2  - R2 連接測試');
+      console.log('  POST /api/upload-to-r2 - 上傳圖片到 R2');
+      console.log('  POST /api/create-r2-room-folder - 創建房號虛擬文件夾');
+      console.log('  GET  /api/files/:room - 獲取 R2 文件列表');
     });
 
     // 優雅關閉
@@ -532,6 +522,16 @@ async function startServer() {
     console.error('❌ 服務器啟動失敗:', err);
     process.exit(1);
   }
+}
+
+// 安裝依賴提示（啟動前檢查必要依賴）
+try {
+  require('@aws-sdk/client-s3');
+  require('uuid');
+} catch (err) {
+  console.error('❌ 缺少必要依賴，請先執行安裝命令：');
+  console.error('npm install @aws-sdk/client-s3 uuid');
+  process.exit(1);
 }
 
 // 啟動服務器

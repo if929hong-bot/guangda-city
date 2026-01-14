@@ -1,64 +1,33 @@
 {
-  "name": "tenant-management-server",
+  "name": "guangda-city-server",
   "version": "1.0.0",
-  "description": "廣大城後端服務（MEGA上傳）",
+  "description": "廣大城租戶管理後端服務（Cloudflare R2 版）",
   "main": "server.js",
-  "type": "commonjs",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "dev:debug": "nodemon --inspect server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "reinstall": "rm -rf node_modules package-lock.json && npm install",
-    "lint": "eslint .",
-    "predeploy": "npm run lint",
-    "heroku-postbuild": "echo \"No build step required\"",
-    "clean": "rm -rf temp_uploads"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "tenant-management",
-    "mega",
-    "upload",
-    "express",
-    "backend"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.501.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^4.22.1",
-    "megajs": "^1.1.4",
-    "multer": "^2.0.2",
-    "redis": "^4.6.12"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7",
-    "eslint": "^9.17.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.30.0",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^7.2.0"
+    "nodemon": "^3.0.2"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/tenant-management-server.git"
+  "engines": {
+    "node": ">=16.0.0"
   },
-  "bugs": {
-    "url": "https://github.com/your-username/tenant-management-server/issues"
-  },
-  "homepage": "https://github.com/your-username/tenant-management-server#readme",
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "server.js",
-    "package.json",
-    "README.md",
-    ".env.example"
-  ]
+  "keywords": [
+    "r2",
+    "cloudflare",
+    "express",
+    "file-upload"
+  ],
+  "author": "",
+  "license": "MIT"
 }
