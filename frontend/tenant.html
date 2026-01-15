@@ -479,7 +479,7 @@
       cursor: pointer;
     }
 
-    /* ===== 新增：圖片上傳模塊樣式 ===== */
+    /* ===== 圖片上傳模塊樣式 ===== */
     .upload-image-section {
       background: white;
       border-radius: 8px;
@@ -571,20 +571,6 @@
       width: 0%;
       transition: width 0.3s ease;
     }
-    .upload-message {
-      text-align: center;
-      font-size: 14px;
-      margin-top: 10px;
-      display: none;
-    }
-    .upload-message.success {
-      color: #28a745;
-      display: block;
-    }
-    .upload-message.error {
-      color: #dc3545;
-      display: block;
-    }
     .upload-preview {
       margin-top: 20px;
       display: none;
@@ -610,10 +596,10 @@
     </button>
   </div>
 
-  <!-- ===== 新增：圖片上傳模塊 ===== -->
+  <!-- 租客圖片上傳模塊（頂部） -->
   <div class="upload-image-section">
     <div class="upload-image-header">
-      <div class="upload-image-title">租客圖片上傳（直接上傳到 Cloudflare R2）</div>
+      <div class="upload-image-title">租客圖片上傳</div>
     </div>
     <form class="upload-form" id="imageUploadForm">
       <div class="upload-room-group">
@@ -633,10 +619,8 @@
         <div class="progress-bar" id="progressBar"></div>
       </div>
       <button type="button" class="btn-upload" id="uploadImageBtn" disabled>
-        <i class="fa-solid fa-upload"></i> 上傳到 Cloudflare R2
+        <i class="fa-solid fa-upload"></i> 上傳圖片
       </button>
-      <div class="upload-message success" id="uploadSuccessMsg">✅ 圖片上傳成功！</div>
-      <div class="upload-message error" id="uploadErrorMsg">❌ 圖片上傳失敗，請稍後再試！</div>
       <div class="upload-preview" id="uploadPreview">
         <div class="preview-title">預覽圖片：</div>
         <img src="" alt="預覽圖片" class="preview-image" id="previewImage">
@@ -723,7 +707,6 @@
           <th>電話</th>
           <th>信箱</th>
           <th>房號</th>
-          <th>Cloudflare R2 存儲桶</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -745,7 +728,6 @@
           <th>相簿名稱</th>
           <th>圖片數量</th>
           <th>建立時間</th>
-          <th>Cloudflare R2 存儲桶</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -804,10 +786,6 @@
           <label for="albumName">相簿名稱 *</label>
           <input type="text" id="albumName" class="form-input" placeholder="請輸入相簿名稱">
           <div class="error-message" id="albumNameError">請輸入相簿名稱</div>
-        </div>
-        <div class="form-group">
-          <label for="albumImageUrls">Cloudflare R2 圖片URL（多張請用逗號分隔）</label>
-          <input type="text" id="albumImageUrls" class="form-input" placeholder="https://xxx.r2.dev/xxx.jpg,https://xxx.r2.dev/yyy.jpg">
         </div>
         <button type="button" class="btn-submit" id="submitAlbumBtn">
           <i class="fa-solid fa-save"></i> 新增相簿
@@ -881,11 +859,10 @@
   <script>
     let currentEditingAlbumIndex = -1;
     let currentEditingPaymentIndex = -1;
-    let selectedImageFile = null; // 新增：存儲選中的圖片文件
+    let selectedImageFile = null;
 
-    // 配置：Cloudflare R2 公開訪問地址（從 env-config.js 獲取，若加載失敗則使用默認值）
+    // 配置：Cloudflare R2 公開訪問地址
     let R2_PUBLIC_URL = "https://pub-8931ead8377a4cd595e51d38fb210975.r2.dev";
-    // 後端服務地址（本地開發默認，生產環境請替換為實際後端地址）
     const API_BASE_URL = "http://localhost:3000";
 
     // 嘗試加載環境配置
@@ -1032,11 +1009,11 @@
       document.getElementById('imagePreviewClose').addEventListener('click', () => {
         document.getElementById('imagePreviewModal').style.display = 'none';
       });
-      // 新增：綁定圖片上傳相關事件
+      // 綁定圖片上傳相關事件
       bindUploadEvents();
     });
 
-    // ===== 新增：圖片上傳相關事件綁定 =====
+    // 圖片上傳相關事件綁定
     function bindUploadEvents() {
       const fileUploadArea = document.getElementById('fileUploadArea');
       const imageFileInput = document.getElementById('imageFileInput');
@@ -1116,7 +1093,7 @@
       // 上傳按鈕點擊事件
       uploadImageBtn.addEventListener('click', uploadImageToR2);
 
-      // 拖動文件上傳（增強體驗）
+      // 拖動文件上傳
       fileUploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
         fileUploadArea.style.borderColor = '#007bff';
@@ -1144,19 +1121,16 @@
       });
     }
 
-    // ===== 新增：上傳圖片到 Cloudflare R2（對接後端接口） =====
+    // 上傳圖片到 Cloudflare R2
     async function uploadImageToR2() {
       const uploadRoomInput = document.getElementById('uploadRoom');
       const uploadImageBtn = document.getElementById('uploadImageBtn');
       const uploadProgress = document.getElementById('uploadProgress');
       const progressBar = document.getElementById('progressBar');
-      const uploadSuccessMsg = document.getElementById('uploadSuccessMsg');
-      const uploadErrorMsg = document.getElementById('uploadErrorMsg');
       const uploadRoomError = document.getElementById('uploadRoomError');
 
       // 隱藏之前的提示信息
-      uploadSuccessMsg.style.display = 'none';
-      uploadErrorMsg.style.display = 'none';
+      uploadRoomError.style.display = 'none';
 
       // 驗證房號
       const room = uploadRoomInput.value.trim();
@@ -1189,7 +1163,6 @@
         const response = await fetch(`${API_BASE_URL}/api/upload-to-r2`, {
           method: 'POST',
           body: formData,
-          // 上傳進度跟蹤（可選）
           onUploadProgress: (e) => {
             if (e.lengthComputable) {
               const progress = (e.loaded / e.total) * 100;
@@ -1205,7 +1178,6 @@
           // 上傳成功
           progressBar.style.width = '100%';
           setTimeout(() => {
-            uploadSuccessMsg.style.display = 'block';
             uploadProgress.style.display = 'none';
 
             // 重置表單
@@ -1213,32 +1185,30 @@
             selectedImageFile = null;
             document.getElementById('uploadPreview').style.display = 'none';
 
-            // 同步更新相簿和圖片列表（可選，根據業務需求調整）
+            // 同步更新相簿和圖片列表
             loadAlbumData();
             loadStatsData();
 
             // 還原按鈕狀態
             setTimeout(() => {
-              uploadImageBtn.innerHTML = '<i class="fa-solid fa-upload"></i> 上傳到 Cloudflare R2';
-              uploadSuccessMsg.style.display = 'none';
-            }, 2000);
+              uploadImageBtn.innerHTML = '<i class="fa-solid fa-upload"></i> 上傳圖片';
+              uploadImageBtn.disabled = false;
+            }, 1000);
           }, 500);
         } else {
-          // 上傳失敗（後端返回錯誤）
+          // 上傳失敗
           throw new Error(result.msg || '上傳失敗，後端返回異常');
         }
       } catch (e) {
         console.error('圖片上傳失敗:', e);
-        uploadErrorMsg.style.display = 'block';
-        uploadErrorMsg.textContent = `❌ ${e.message || '圖片上傳失敗，請稍後再試！'}`;
+        alert(`圖片上傳失敗：${e.message || '請稍後再試！'}`);
         uploadProgress.style.display = 'none';
 
         // 還原按鈕狀態
         setTimeout(() => {
           uploadImageBtn.disabled = false;
-          uploadImageBtn.innerHTML = '<i class="fa-solid fa-upload"></i> 上傳到 Cloudflare R2';
-          uploadErrorMsg.style.display = 'none';
-        }, 3000);
+          uploadImageBtn.innerHTML = '<i class="fa-solid fa-upload"></i> 上傳圖片';
+        }, 1000);
       }
     }
 
@@ -1418,7 +1388,6 @@
           <td>${phone}</td>
           <td>${email}</td>
           <td>${room}</td>
-          <td><a href="${R2_PUBLIC_URL}" target="_blank" class="r2-link">查看 Cloudflare R2 存儲桶</a></td>
           <td>
             <button class="btn-view" onclick="viewTenantImages('${room}')">查看圖片</button>
             <button class="btn-delete" onclick="deleteTenant(${index})">刪除</button>
@@ -1580,39 +1549,13 @@
           <td>${name}</td>
           <td>${imageCount}</td>
           <td>${createTime}</td>
-          <td><a href="${R2_PUBLIC_URL}" target="_blank" class="r2-link">查看 Cloudflare R2 存儲桶</a></td>
           <td>
             <button class="btn-view" onclick="viewAlbumImages(${index})">查看圖片</button>
-            <button class="btn-edit" onclick="editAlbum(${index})">編輯</button>
             <button class="btn-delete" onclick="deleteAlbum(${index})">刪除</button>
           </td>
         `;
         albumTableBody.appendChild(tr);
       });
-    }
-
-    // 編輯相簿
-    function editAlbum(index) {
-      try {
-        const albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
-        if (index < 0 || index >= albums.length) return;
-        
-        const album = albums[index];
-        currentEditingAlbumIndex = index;
-        
-        // 填充表單
-        document.getElementById('albumRoom').value = album.room || '';
-        document.getElementById('albumName').value = album.name || '';
-        document.getElementById('albumImageUrls').value = album.images ? album.images.join(',') : '';
-        
-        // 打開彈窗
-        document.getElementById('addAlbumModal').style.display = 'flex';
-        document.querySelector('#addAlbumModal .modal-title').textContent = '編輯相簿';
-        document.getElementById('submitAlbumBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
-      } catch (e) {
-        console.error('加載相簿編輯數據失敗:', e);
-        alert('編輯相簿失敗，請稍後再試！');
-      }
     }
 
     // 刪除相簿
@@ -1621,7 +1564,7 @@
 
       try {
         let albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
-        // 刪除相簿對應的圖片記錄（本地）
+        // 刪除相簿對應的圖片記錄
         const albumRoom = albums[index].room;
         let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
         if (roomImages[albumRoom]) delete roomImages[albumRoom];
@@ -1652,11 +1595,10 @@
       document.getElementById('submitAlbumBtn').innerHTML = '<i class="fa-solid fa-save"></i> 新增相簿';
     }
 
-    // 提交相簿（新增/編輯）
+    // 提交相簿（新增）
     function submitAlbum() {
       const albumRoom = document.getElementById('albumRoom').value.trim();
       const albumName = document.getElementById('albumName').value.trim();
-      const albumImageUrls = document.getElementById('albumImageUrls').value.trim();
       
       // 表單驗證
       let isValid = true;
@@ -1679,43 +1621,19 @@
       
       if (!isValid) return;
       
-      // 處理圖片URL（無文件夾路徑）
-      const images = albumImageUrls ? albumImageUrls.split(',').map(url => url.trim()).filter(url => url) : [];
-      
       // 構建相簿數據
       const albumData = {
         room: albumRoom,
         name: albumName,
-        images: images,
-        createTime: currentEditingAlbumIndex === -1 ? new Date().toLocaleString('zh-TW') : JSON.parse(localStorage.getItem('roomAlbums'))[currentEditingAlbumIndex].createTime,
+        images: [],
+        createTime: new Date().toLocaleString('zh-TW'),
         updateTime: new Date().toLocaleString('zh-TW')
       };
       
       try {
         let albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
-        if (currentEditingAlbumIndex === -1) {
-          // 新增相簿
-          albums.push(albumData);
-        } else {
-          // 編輯相簿
-          albums[currentEditingAlbumIndex] = albumData;
-        }
-        
+        albums.push(albumData);
         localStorage.setItem('roomAlbums', JSON.stringify(albums));
-        
-        // 同步更新房間圖片本地存儲（無文件夾邏輯）
-        let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        if (!roomImages[albumRoom]) roomImages[albumRoom] = [];
-        images.forEach(url => {
-          if (!roomImages[albumRoom].some(img => img.url === url)) {
-            roomImages[albumRoom].push({
-              url: url,
-              name: url.split('/').pop() || 'r2_image.jpg',
-              uploadTime: new Date().toLocaleString('zh-TW')
-            });
-          }
-        });
-        localStorage.setItem('roomImages', JSON.stringify(roomImages));
         
         // 提示成功並關閉彈窗
         document.getElementById('albumSaveSuccess').style.display = 'block';
@@ -1744,7 +1662,7 @@
         let roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
         const room = album.room;
         if (roomImages[room]) {
-          roomImages[room] = roomImages[room].filter(img => !album.images.includes(img.url));
+          roomImages[room] = roomImages[room].filter(img => !album.images.includes(img));
           localStorage.setItem('roomImages', JSON.stringify(roomImages));
         }
         
@@ -1757,7 +1675,7 @@
       }
     }
 
-    // 查看相簿圖片（新增刪除按鈕）
+    // 查看相簿圖片
     function viewAlbumImages(index) {
       try {
         const albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
@@ -1766,7 +1684,7 @@
         const album = albums[index];
         const images = album.images || [];
         
-        // 創建臨時圖片網格容器（如果不存在）
+        // 創建臨時圖片網格容器
         let imagesModal = document.getElementById('tempImagesModal');
         if (!imagesModal) {
           imagesModal = document.createElement('div');
@@ -1814,7 +1732,7 @@
           imagesModal.appendChild(title);
           document.body.appendChild(imagesModal);
         } else {
-          // 清空原有內容（除了關閉按鈕和標題）
+          // 清空原有內容
           const grid = imagesModal.querySelector('.images-grid');
           if (grid) grid.remove();
         }
@@ -1859,53 +1777,20 @@
             const downloadBtn = document.createElement('button');
             downloadBtn.className = 'download-btn';
             downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
-            downloadBtn.style.cssText = `
-              position: absolute;
-              bottom: 10px;
-              right: 10px;
-              background-color: rgba(0, 123, 255, 0.9);
-              color: white;
-              border: none;
-              border-radius: 50%;
-              width: 30px;
-              height: 30px;
-              font-size: 14px;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            `;
-            
             downloadBtn.addEventListener('click', (e) => {
               e.stopPropagation();
               const a = document.createElement('a');
               a.href = imgUrl;
-              a.download = imgUrl.split('/').pop() || `album_${album.room}_${new Date().getTime()}.jpg`;
+              a.download = `相簿圖片_${imgUrl.split('/').pop()}`;
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
             });
-
-            // 新增：圖片刪除按鈕
+            
+            // 刪除按鈕
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-img-btn';
-            deleteBtn.innerHTML = '×';
-            deleteBtn.style.cssText = `
-              position: absolute;
-              top: 5px;
-              right: 5px;
-              background-color: rgba(220, 53, 69, 0.8);
-              color: white;
-              border: none;
-              border-radius: 50%;
-              width: 20px;
-              height: 20px;
-              font-size: 12px;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            `;
+            deleteBtn.innerHTML = '<i class="fa-solid fa-times"></i>';
             deleteBtn.addEventListener('click', (e) => {
               e.stopPropagation();
               deleteAlbumImage(index, imgIndex);
@@ -1919,28 +1804,40 @@
         }
         
         imagesModal.appendChild(imagesGrid);
-        
-        // 點擊彈窗外層關閉
-        imagesModal.addEventListener('click', (e) => {
-          if (e.target === imagesModal) imagesModal.remove();
-        });
       } catch (e) {
         console.error('查看相簿圖片失敗:', e);
         alert('加載相簿圖片失敗，請稍後再試！');
       }
     }
 
-    // 查看租客對應圖片
+    // 查看租客對應房號的圖片
     function viewTenantImages(room) {
       try {
-        const roomImages = JSON.parse(localStorage.getItem('roomImages')) || {};
-        const images = roomImages[room] ? roomImages[room].map(item => item.url) : [];
+        let albums = JSON.parse(localStorage.getItem('roomAlbums')) || [];
+        // 查找該房號對應的所有相簿
+        const roomAlbums = albums.filter(album => album.room === room);
         
-        // 創建臨時圖片彈窗
-        let imagesModal = document.getElementById('tempImagesModal');
+        if (roomAlbums.length === 0) {
+          alert(`房號 ${room} 暫無相簿和圖片`);
+          return;
+        }
+        
+        // 合併所有相簿的圖片
+        let allImages = [];
+        roomAlbums.forEach(album => {
+          allImages = allImages.concat(album.images || []);
+        });
+        
+        if (allImages.length === 0) {
+          alert(`房號 ${room} 的相簿暫無圖片`);
+          return;
+        }
+        
+        // 創建臨時圖片容器
+        let imagesModal = document.getElementById('tempTenantImagesModal');
         if (!imagesModal) {
           imagesModal = document.createElement('div');
-          imagesModal.id = 'tempImagesModal';
+          imagesModal.id = 'tempTenantImagesModal';
           imagesModal.style.cssText = `
             position: fixed;
             top: 0;
@@ -1978,7 +1875,7 @@
             margin-bottom: 30px;
             font-size: 18px;
           `;
-          title.textContent = `租客房間圖片：${room}`;
+          title.textContent = `房號 ${room} - 所有圖片`;
           
           imagesModal.appendChild(closeBtn);
           imagesModal.appendChild(title);
@@ -1995,81 +1892,52 @@
         imagesGrid.style.width = '90%';
         imagesGrid.style.maxWidth = '1200px';
         
-        if (images.length === 0) {
-          const emptyTip = document.createElement('div');
-          emptyTip.style.cssText = 'color: #999; text-align: center; padding: 50px 0; width: 100%;';
-          emptyTip.textContent = '此房間暫無圖片';
-          imagesGrid.appendChild(emptyTip);
-        } else {
-          images.forEach(imgUrl => {
-            const imageItem = document.createElement('div');
-            imageItem.className = 'image-item';
-            imageItem.style.position = 'relative';
-            
-            const img = document.createElement('img');
-            img.src = imgUrl;
-            img.alt = `房間圖片 ${imgUrl.split('/').pop()}`;
-            img.style.width = '100%';
-            img.style.height = '180px';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '4px';
-            img.style.cursor = 'pointer';
-            img.style.transition = 'opacity 0.3s ease';
-            
-            // 圖片預覽
-            img.addEventListener('click', () => {
-              const previewModal = document.getElementById('imagePreviewModal');
-              const previewImg = document.getElementById('imagePreviewImg');
-              previewImg.src = imgUrl;
-              previewModal.style.display = 'flex';
-            });
-            
-            // 下載按鈕
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'download-btn';
-            downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
-            downloadBtn.style.cssText = `
-              position: absolute;
-              bottom: 10px;
-              right: 10px;
-              background-color: rgba(0, 123, 255, 0.9);
-              color: white;
-              border: none;
-              border-radius: 50%;
-              width: 30px;
-              height: 30px;
-              font-size: 14px;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            `;
-            
-            downloadBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const a = document.createElement('a');
-              a.href = imgUrl;
-              a.download = imgUrl.split('/').pop() || `room_${room}_${new Date().getTime()}.jpg`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-            });
-            
-            imageItem.appendChild(img);
-            imageItem.appendChild(downloadBtn);
-            imagesGrid.appendChild(imageItem);
+        allImages.forEach(imgUrl => {
+          const imageItem = document.createElement('div');
+          imageItem.className = 'image-item';
+          imageItem.style.position = 'relative';
+          
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = `租客圖片 ${imgUrl.split('/').pop()}`;
+          img.style.width = '100%';
+          img.style.height = '180px';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '4px';
+          img.style.cursor = 'pointer';
+          img.style.transition = 'opacity 0.3s ease';
+          
+          // 圖片預覽
+          img.addEventListener('click', () => {
+            const previewModal = document.getElementById('imagePreviewModal');
+            const previewImg = document.getElementById('imagePreviewImg');
+            previewImg.src = imgUrl;
+            previewModal.style.display = 'flex';
           });
-        }
+          
+          // 下載按鈕
+          const downloadBtn = document.createElement('button');
+          downloadBtn.className = 'download-btn';
+          downloadBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+          downloadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const a = document.createElement('a');
+            a.href = imgUrl;
+            a.download = `房號${room}_圖片_${imgUrl.split('/').pop()}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          });
+          
+          imageItem.appendChild(img);
+          imageItem.appendChild(downloadBtn);
+          imagesGrid.appendChild(imageItem);
+        });
         
         imagesModal.appendChild(imagesGrid);
-        
-        // 點擊外層關閉
-        imagesModal.addEventListener('click', (e) => {
-          if (e.target === imagesModal) imagesModal.remove();
-        });
       } catch (e) {
-        console.error('查看租客房間圖片失敗:', e);
-        alert('加載房間圖片失敗，請稍後再試！');
+        console.error('查看租客圖片失敗:', e);
+        alert('加載租客圖片失敗，請稍後再試！');
       }
     }
 
@@ -2090,16 +1958,17 @@
       const totalPayments = document.getElementById('totalPayments');
       const totalAmountSum = document.getElementById('totalAmountSum');
 
-      // 更新統計數據
       totalPayments.textContent = payments.length;
-      let sum = 0;
+
+      // 計算總金額
+      let totalAmount = 0;
       payments.forEach(payment => {
         const rent = parseInt(payment.rent) || 0;
         const electricity = parseInt(payment.electricity) || 0;
         const water = parseInt(payment.water) || 0;
-        sum += rent + electricity + water;
+        totalAmount += rent + electricity + water;
       });
-      totalAmountSum.textContent = `$${sum.toLocaleString('zh-TW')}`;
+      totalAmountSum.textContent = `$${totalAmount.toLocaleString()}`;
 
       if (payments.length === 0) {
         emptyText.style.display = 'block';
@@ -2117,33 +1986,32 @@
       payments.forEach((payment, index) => {
         const tr = document.createElement('tr');
         tr.setAttribute('data-index', index);
-        const tenantName = payment.tenantName || '未填寫';
+        const name = payment.tenantName || '未填寫';
         const room = payment.room || '未填寫';
         const rentalPeriod = payment.rentalPeriod || '未填寫';
         const paymentPeriod = payment.paymentPeriod || '未填寫';
-        const rent = parseInt(payment.rent) || 0;
-        const electricity = parseInt(payment.electricity) || 0;
-        const water = parseInt(payment.water) || 0;
-        const total = rent + electricity + water;
+        const rent = payment.rent || '0';
+        const electricity = payment.electricity || '0';
+        const water = payment.water || '0';
+        const total = (parseInt(rent) + parseInt(electricity) + parseInt(water)).toLocaleString();
         const paymentDate = payment.paymentDate || '未填寫';
-        const paymentLast5 = payment.paymentLast5 || '未填寫';
+        const last5 = payment.last5 || '未填寫';
         const createTime = payment.createTime || '未知時間';
 
         tr.innerHTML = `
           <td><input type="checkbox" class="payment-checkbox" data-index="${index}"></td>
-          <td>${tenantName}</td>
+          <td>${name}</td>
           <td>${room}</td>
           <td>${rentalPeriod}</td>
           <td>${paymentPeriod}</td>
-          <td>$${rent.toLocaleString('zh-TW')}</td>
-          <td>$${electricity.toLocaleString('zh-TW')}</td>
-          <td>$${water.toLocaleString('zh-TW')}</td>
-          <td>$${total.toLocaleString('zh-TW')}</td>
+          <td>$${rent}</td>
+          <td>$${electricity}</td>
+          <td>$${water}</td>
+          <td>$${total}</td>
           <td>${paymentDate}</td>
-          <td>${paymentLast5}</td>
+          <td>${last5}</td>
           <td>${createTime}</td>
           <td>
-            <button class="btn-edit" onclick="editPayment(${index})">編輯</button>
             <button class="btn-delete" onclick="deletePayment(${index})">刪除</button>
           </td>
         `;
@@ -2157,7 +2025,7 @@
       updatePaymentBatchDeleteBtnStatus();
     }
 
-    // 刪除單條繳費記錄
+    // 刪除繳費記錄
     function deletePayment(index) {
       if (!confirm('確定要刪除該繳費記錄嗎？刪除後無法復原！')) return;
 
@@ -2229,44 +2097,15 @@
       }
     }
 
-    // 編輯繳費記錄
-    function editPayment(index) {
-      try {
-        const payments = JSON.parse(localStorage.getItem('paymentRecords')) || [];
-        if (index < 0 || index >= payments.length) return;
-        
-        const payment = payments[index];
-        currentEditingPaymentIndex = index;
-        
-        // 填充表單
-        document.getElementById('paymentTenantName').value = payment.tenantName || '';
-        document.getElementById('paymentRoom').value = payment.room || '';
-        document.getElementById('paymentRentalPeriod').value = payment.rentalPeriod || '';
-        document.getElementById('paymentPeriod').value = payment.paymentPeriod || '';
-        document.getElementById('paymentRent').value = payment.rent || 0;
-        document.getElementById('paymentElectricity').value = payment.electricity || 0;
-        document.getElementById('paymentWater').value = payment.water || 0;
-        document.getElementById('paymentDate').value = payment.paymentDate || '';
-        document.getElementById('paymentLast5').value = payment.paymentLast5 || '';
-        
-        // 打開彈窗
-        document.getElementById('addPaymentModal').style.display = 'flex';
-        document.querySelector('#addPaymentModal .modal-title').textContent = '編輯繳費記錄';
-        document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 保存修改';
-      } catch (e) {
-        console.error('加載繳費記錄編輯數據失敗:', e);
-        alert('編輯繳費記錄失敗，請稍後再試！');
-      }
-    }
-
     // 重置繳費記錄表單
     function resetPaymentForm() {
       document.getElementById('addPaymentForm').reset();
-      document.getElementById('paymentTenantNameError').style.display = 'none';
-      document.getElementById('paymentRoomError').style.display = 'none';
-      document.getElementById('paymentPeriodError').style.display = 'none';
-      document.getElementById('paymentRentError').style.display = 'none';
-      document.querySelectorAll('#addPaymentForm .form-input').forEach(input => {
+      const errorElements = document.querySelectorAll('#addPaymentForm .error-message');
+      errorElements.forEach(error => {
+        error.style.display = 'none';
+      });
+      const inputElements = document.querySelectorAll('#addPaymentForm .form-input');
+      inputElements.forEach(input => {
         input.classList.remove('error');
       });
       document.getElementById('paymentSaveSuccess').style.display = 'none';
@@ -2274,26 +2113,28 @@
       document.getElementById('submitPaymentBtn').innerHTML = '<i class="fa-solid fa-save"></i> 新增繳費記錄';
     }
 
-    // 提交繳費記錄（新增/編輯）
+    // 提交繳費記錄（新增）
     function submitPayment() {
       const tenantName = document.getElementById('paymentTenantName').value.trim();
       const room = document.getElementById('paymentRoom').value.trim();
       const rentalPeriod = document.getElementById('paymentRentalPeriod').value.trim();
       const paymentPeriod = document.getElementById('paymentPeriod').value.trim();
       const rent = document.getElementById('paymentRent').value.trim();
-      const electricity = document.getElementById('paymentElectricity').value.trim() || 0;
-      const water = document.getElementById('paymentWater').value.trim() || 0;
+      const electricity = document.getElementById('paymentElectricity').value.trim() || '0';
+      const water = document.getElementById('paymentWater').value.trim() || '0';
       const paymentDate = document.getElementById('paymentDate').value.trim();
-      const paymentLast5 = document.getElementById('paymentLast5').value.trim();
+      const last5 = document.getElementById('paymentLast5').value.trim();
       
       // 表單驗證
       let isValid = true;
-      document.querySelectorAll('#addPaymentForm .error-message').forEach(error => {
-        error.style.display = 'none';
-      });
-      document.querySelectorAll('#addPaymentForm .form-input').forEach(input => {
-        input.classList.remove('error');
-      });
+      document.getElementById('paymentTenantNameError').style.display = 'none';
+      document.getElementById('paymentRoomError').style.display = 'none';
+      document.getElementById('paymentPeriodError').style.display = 'none';
+      document.getElementById('paymentRentError').style.display = 'none';
+      document.getElementById('paymentTenantName').classList.remove('error');
+      document.getElementById('paymentRoom').classList.remove('error');
+      document.getElementById('paymentPeriod').classList.remove('error');
+      document.getElementById('paymentRent').classList.remove('error');
       
       if (!tenantName) {
         document.getElementById('paymentTenantName').classList.add('error');
@@ -2323,29 +2164,22 @@
       
       // 構建繳費記錄數據
       const paymentData = {
-        tenantName: tenantName,
-        room: room,
-        rentalPeriod: rentalPeriod,
-        paymentPeriod: paymentPeriod,
-        rent: parseInt(rent),
-        electricity: parseInt(electricity),
-        water: parseInt(water),
-        paymentDate: paymentDate,
-        paymentLast5: paymentLast5,
-        createTime: currentEditingPaymentIndex === -1 ? new Date().toLocaleString('zh-TW') : JSON.parse(localStorage.getItem('paymentRecords'))[currentEditingPaymentIndex].createTime,
+        tenantName,
+        room,
+        rentalPeriod,
+        paymentPeriod,
+        rent,
+        electricity,
+        water,
+        paymentDate,
+        last5,
+        createTime: new Date().toLocaleString('zh-TW'),
         updateTime: new Date().toLocaleString('zh-TW')
       };
       
       try {
         let payments = JSON.parse(localStorage.getItem('paymentRecords')) || [];
-        if (currentEditingPaymentIndex === -1) {
-          // 新增繳費記錄
-          payments.push(paymentData);
-        } else {
-          // 編輯繳費記錄
-          payments[currentEditingPaymentIndex] = paymentData;
-        }
-        
+        payments.push(paymentData);
         localStorage.setItem('paymentRecords', JSON.stringify(payments));
         
         // 提示成功並關閉彈窗
@@ -2381,7 +2215,7 @@
           const water = parseInt(payment.water) || 0;
           totalAmount += rent + electricity + water;
         });
-        document.getElementById('totalAmountSum').textContent = `$${totalAmount.toLocaleString('zh-TW')}`;
+        document.getElementById('totalAmountSum').textContent = `$${totalAmount.toLocaleString()}`;
       } catch (e) {
         console.error('加載統計數據失敗:', e);
       }
