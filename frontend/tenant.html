@@ -478,6 +478,128 @@
       font-size: 40px;
       cursor: pointer;
     }
+
+    /* ===== 新增：圖片上傳模塊樣式 ===== */
+    .upload-image-section {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+    .upload-image-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .upload-image-title {
+      font-size: 18px;
+      color: #1f4e8c;
+      font-weight: bold;
+    }
+    .upload-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    .file-upload-group {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .file-upload-group:hover {
+      border-color: #007bff;
+      background-color: #f8f9fa;
+    }
+    .file-upload-icon {
+      font-size: 48px;
+      color: #007bff;
+      margin-bottom: 15px;
+    }
+    .file-upload-text {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .file-upload-tip {
+      font-size: 12px;
+      color: #999;
+    }
+    #imageFileInput {
+      display: none;
+    }
+    .upload-room-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+    }
+    .btn-upload {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      justify-self: center;
+    }
+    .btn-upload:hover {
+      background-color: #0056b3;
+    }
+    .btn-upload:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    .upload-progress {
+      height: 5px;
+      background-color: #eee;
+      border-radius: 3px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background-color: #28a745;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .upload-message {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+    .upload-message.success {
+      color: #28a745;
+      display: block;
+    }
+    .upload-message.error {
+      color: #dc3545;
+      display: block;
+    }
+    .upload-preview {
+      margin-top: 20px;
+      display: none;
+    }
+    .preview-title {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .preview-image {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 <body>
@@ -486,6 +608,40 @@
     <button class="logout-btn" id="logoutBtn">
       <i class="fa-solid fa-right-from-bracket"></i> 登出
     </button>
+  </div>
+
+  <!-- ===== 新增：圖片上傳模塊 ===== -->
+  <div class="upload-image-section">
+    <div class="upload-image-header">
+      <div class="upload-image-title">租客圖片上傳（直接上傳到 Cloudflare R2）</div>
+    </div>
+    <form class="upload-form" id="imageUploadForm">
+      <div class="upload-room-group">
+        <label for="uploadRoom">房號 *</label>
+        <input type="text" id="uploadRoom" class="form-input" placeholder="請輸入房號（如：101）">
+        <div class="error-message" id="uploadRoomError">請輸入房號</div>
+      </div>
+      <div class="file-upload-group" id="fileUploadArea">
+        <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/jpg">
+        <div class="file-upload-icon">
+          <i class="fa-solid fa-cloud-upload-alt"></i>
+        </div>
+        <div class="file-upload-text">點擊或拖動圖片到這裡上傳</div>
+        <div class="file-upload-tip">支持 JPG、PNG 格式，單張最大 10MB</div>
+      </div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <button type="button" class="btn-upload" id="uploadImageBtn" disabled>
+        <i class="fa-solid fa-upload"></i> 上傳到 Cloudflare R2
+      </button>
+      <div class="upload-message success" id="uploadSuccessMsg">✅ 圖片上傳成功！</div>
+      <div class="upload-message error" id="uploadErrorMsg">❌ 圖片上傳失敗，請稍後再試！</div>
+      <div class="upload-preview" id="uploadPreview">
+        <div class="preview-title">預覽圖片：</div>
+        <img src="" alt="預覽圖片" class="preview-image" id="previewImage">
+      </div>
+    </form>
   </div>
 
   <div class="payment-info-section">
@@ -725,9 +881,21 @@
   <script>
     let currentEditingAlbumIndex = -1;
     let currentEditingPaymentIndex = -1;
+    let selectedImageFile = null; // 新增：存儲選中的圖片文件
 
-    // 配置：Cloudflare R2 公開訪問地址
-    const R2_PUBLIC_URL = "https://pub-8931ead8377a4cd595e51d38fb210975.r2.dev";
+    // 配置：Cloudflare R2 公開訪問地址（從 env-config.js 獲取，若加載失敗則使用默認值）
+    let R2_PUBLIC_URL = "https://pub-8931ead8377a4cd595e51d38fb210975.r2.dev";
+    // 後端服務地址（本地開發默認，生產環境請替換為實際後端地址）
+    const API_BASE_URL = "http://localhost:3000";
+
+    // 嘗試加載環境配置
+    try {
+      if (typeof ENV_CONFIG !== 'undefined') {
+        R2_PUBLIC_URL = ENV_CONFIG.R2_PUBLIC_URL || R2_PUBLIC_URL;
+      }
+    } catch (e) {
+      console.warn('環境配置文件加載失敗，使用默認 R2 公開地址');
+    }
 
     const adminTabs = document.querySelectorAll('.admin-tab');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -864,7 +1032,215 @@
       document.getElementById('imagePreviewClose').addEventListener('click', () => {
         document.getElementById('imagePreviewModal').style.display = 'none';
       });
+      // 新增：綁定圖片上傳相關事件
+      bindUploadEvents();
     });
+
+    // ===== 新增：圖片上傳相關事件綁定 =====
+    function bindUploadEvents() {
+      const fileUploadArea = document.getElementById('fileUploadArea');
+      const imageFileInput = document.getElementById('imageFileInput');
+      const uploadRoomInput = document.getElementById('uploadRoom');
+      const uploadImageBtn = document.getElementById('uploadImageBtn');
+      const uploadPreview = document.getElementById('uploadPreview');
+      const previewImage = document.getElementById('previewImage');
+      const uploadRoomError = document.getElementById('uploadRoomError');
+
+      // 點擊上傳區域喚起文件選擇框
+      fileUploadArea.addEventListener('click', () => {
+        imageFileInput.click();
+      });
+
+      // 選擇圖片後的處理
+      imageFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          selectedImageFile = null;
+          uploadImageBtn.disabled = true;
+          uploadPreview.style.display = 'none';
+          return;
+        }
+
+        // 驗證圖片格式
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+          alert('請選擇 JPG 或 PNG 格式的圖片！');
+          imageFileInput.value = '';
+          selectedImageFile = null;
+          uploadImageBtn.disabled = true;
+          uploadPreview.style.display = 'none';
+          return;
+        }
+
+        // 驗證圖片大小（最大 10MB）
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+          alert('圖片大小不能超過 10MB！');
+          imageFileInput.value = '';
+          selectedImageFile = null;
+          uploadImageBtn.disabled = true;
+          uploadPreview.style.display = 'none';
+          return;
+        }
+
+        // 存儲選中的文件
+        selectedImageFile = file;
+
+        // 顯示圖片預覽
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImage.src = e.target.result;
+          uploadPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        // 啟用上傳按鈕（需先填寫房號）
+        if (uploadRoomInput.value.trim()) {
+          uploadImageBtn.disabled = false;
+        }
+      });
+
+      // 房號輸入框變更事件
+      uploadRoomInput.addEventListener('input', () => {
+        uploadRoomError.style.display = 'none';
+        uploadRoomInput.classList.remove('error');
+
+        // 啟用/禁用上傳按鈕
+        if (uploadRoomInput.value.trim() && selectedImageFile) {
+          uploadImageBtn.disabled = false;
+        } else {
+          uploadImageBtn.disabled = true;
+        }
+      });
+
+      // 上傳按鈕點擊事件
+      uploadImageBtn.addEventListener('click', uploadImageToR2);
+
+      // 拖動文件上傳（增強體驗）
+      fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#007bff';
+        fileUploadArea.style.backgroundColor = '#f8f9fa';
+      });
+
+      fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.style.borderColor = '#ddd';
+        fileUploadArea.style.backgroundColor = 'transparent';
+      });
+
+      fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.style.borderColor = '#ddd';
+        fileUploadArea.style.backgroundColor = 'transparent';
+
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+
+        // 模擬文件選擇框變更事件
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        imageFileInput.files = dataTransfer.files;
+        imageFileInput.dispatchEvent(new Event('change'));
+      });
+    }
+
+    // ===== 新增：上傳圖片到 Cloudflare R2（對接後端接口） =====
+    async function uploadImageToR2() {
+      const uploadRoomInput = document.getElementById('uploadRoom');
+      const uploadImageBtn = document.getElementById('uploadImageBtn');
+      const uploadProgress = document.getElementById('uploadProgress');
+      const progressBar = document.getElementById('progressBar');
+      const uploadSuccessMsg = document.getElementById('uploadSuccessMsg');
+      const uploadErrorMsg = document.getElementById('uploadErrorMsg');
+      const uploadRoomError = document.getElementById('uploadRoomError');
+
+      // 隱藏之前的提示信息
+      uploadSuccessMsg.style.display = 'none';
+      uploadErrorMsg.style.display = 'none';
+
+      // 驗證房號
+      const room = uploadRoomInput.value.trim();
+      if (!room) {
+        uploadRoomInput.classList.add('error');
+        uploadRoomError.style.display = 'block';
+        return;
+      }
+
+      // 驗證是否選擇了圖片
+      if (!selectedImageFile) {
+        alert('請先選擇要上傳的圖片！');
+        return;
+      }
+
+      // 構建 FormData
+      const formData = new FormData();
+      formData.append('image', selectedImageFile);
+      formData.append('room', room);
+      formData.append('fileName', selectedImageFile.name);
+
+      // 準備上傳
+      uploadImageBtn.disabled = true;
+      uploadImageBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 上傳中...';
+      uploadProgress.style.display = 'block';
+      progressBar.style.width = '0%';
+
+      try {
+        // 發送請求到後端接口
+        const response = await fetch(`${API_BASE_URL}/api/upload-to-r2`, {
+          method: 'POST',
+          body: formData,
+          // 上傳進度跟蹤（可選）
+          onUploadProgress: (e) => {
+            if (e.lengthComputable) {
+              const progress = (e.loaded / e.total) * 100;
+              progressBar.style.width = `${progress}%`;
+            }
+          }
+        });
+
+        // 解析響應結果
+        const result = await response.json();
+
+        if (result.success) {
+          // 上傳成功
+          progressBar.style.width = '100%';
+          setTimeout(() => {
+            uploadSuccessMsg.style.display = 'block';
+            uploadProgress.style.display = 'none';
+
+            // 重置表單
+            document.getElementById('imageUploadForm').reset();
+            selectedImageFile = null;
+            document.getElementById('uploadPreview').style.display = 'none';
+
+            // 同步更新相簿和圖片列表（可選，根據業務需求調整）
+            loadAlbumData();
+            loadStatsData();
+
+            // 還原按鈕狀態
+            setTimeout(() => {
+              uploadImageBtn.innerHTML = '<i class="fa-solid fa-upload"></i> 上傳到 Cloudflare R2';
+              uploadSuccessMsg.style.display = 'none';
+            }, 2000);
+          }, 500);
+        } else {
+          // 上傳失敗（後端返回錯誤）
+          throw new Error(result.msg || '上傳失敗，後端返回異常');
+        }
+      } catch (e) {
+        console.error('圖片上傳失敗:', e);
+        uploadErrorMsg.style.display = 'block';
+        uploadErrorMsg.textContent = `❌ ${e.message || '圖片上傳失敗，請稍後再試！'}`;
+        uploadProgress.style.display = 'none';
+
+        // 還原按鈕狀態
+        setTimeout(() => {
+          uploadImageBtn.disabled = false;
+          uploadImageBtn.innerHTML = '<i class="fa-solid fa-upload"></i> 上傳到 Cloudflare R2';
+          uploadErrorMsg.style.display = 'none';
+        }, 3000);
+      }
+    }
 
     function bindSearchEvents() {
       document.getElementById('tenantSearch').addEventListener('input', (e) => {
